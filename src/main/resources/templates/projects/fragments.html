@@ -3,7 +3,7 @@
 <body>
 
     <!-- Project Card Fragment -->
-    <div th:fragment="project-card" 
+    <div th:fragment="project-card(project)" 
          th:data-project-id="${project.id}"
          th:class="${project.status == T(com.agnel.devcollab.entity.Project.Status).DOING} ? 
                    'card mb-3 project-card border-warning shadow-lg' : 
