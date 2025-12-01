@@ -1,0 +1,163 @@
+body, html {
+  height: 100%;
+}
+
+.backgroundImage {
+  background-image: url("https://images.unsplash.com/photo-1626437513709-7ed95e5d0008?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2071&q=80");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: fixed;
+  height: 100%;
+  width: 100%;
+  margin: 0;
+}
+
+.buttonStyle {
+  font-family: "Book Antiqua", serif;
+  background-color: #fbeee0;
+  border: 2px solid #735646;
+  border-radius: 30px;
+  box-shadow: #735646 4px 4px 0 0;
+  color: #735646;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 2vmax;
+  padding: 0 10px;
+  line-height: 50px;
+  text-align: center;
+  text-decoration: none;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.smallButtonStyle {
+  font-family: "Book Antiqua", serif;
+  background-color: #fbeee0;
+  border: 1px solid #735646;
+  border-radius: 20px;
+  box-shadow: #735646 4px 4px 0 0;
+  color: #735646;
+  cursor: pointer;
+  font-weight: 200;
+  font-size: 2vmin;
+  padding: 0 10px;
+  line-height: 10px;
+  text-align: center;
+  text-decoration: none;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.smallButtonStyle:active {
+  box-shadow: #735646 2px 2px 0 0;
+  transform: translate(2px, 2px);
+}
+
+.buttonStyle:hover {
+  background-color: #fff;
+}
+
+.buttonStyle:active {
+  box-shadow: #735646 2px 2px 0 0;
+  transform: translate(2px, 2px);
+}
+
+@media (min-width: 768px) {
+  .buttonStyle {
+    min-width: 100px;
+    padding: 0 2vmax;
+  }
+}
+.activeBtn {
+  color: rgba(115, 86, 70, 0.56);
+  border: 1px rgba(115, 86, 70, 0.56) solid;
+  background-color: rgba(251, 238, 224, 0.56);
+}
+
+.topBar {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: space-around;
+  margin: 1% 7% 0;
+}
+.topBar .settings {
+  background-color: rgba(0, 0, 0, 0);
+  border: 0;
+  font-size: 20px;
+  margin-right: 1%;
+  right: 0;
+  position: fixed;
+  color: #735646;
+}
+
+.titlePomodoro {
+  font-family: "Lucida Handwriting", serif;
+  color: #914d0e;
+  font-weight: 600;
+  text-align: right;
+  padding-right: 20px;
+  position: fixed;
+  bottom: 4%;
+  right: 0;
+}
+.titlePomodoro p {
+  color: #5e331e;
+  font-weight: 400;
+  padding-right: 20px;
+  float: right;
+  position: fixed;
+  padding-top: 3px;
+  bottom: 0;
+  right: 0;
+}
+
+.darkMode .backgroundImage {
+  background-image: url("https://w0.peakpx.com/wallpaper/259/146/HD-wallpaper-dark-academia-dark-academia-stock-dark-academia-aesthetic.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: fixed;
+  height: 100%;
+  width: 100%;
+  margin: 0;
+}
+.darkMode .titlePomodoro {
+  color: rgb(75, 74, 74);
+}
+.darkMode .titlePomodoro p {
+  color: rgba(65, 65, 65, 0.41);
+}
+.darkMode .settings {
+  color: #282c34;
+}
+.darkMode .buttonStyle {
+  background-color: #b2b2b2;
+  border: 2px solid rgb(54, 54, 54);
+  box-shadow: rgb(75, 74, 74) 4px 4px 0 0;
+  color: #4b4a4a;
+}
+.darkMode .buttonStyle:active {
+  box-shadow: rgba(75, 74, 74, 0.34) 2px 2px 0 0;
+  transform: translate(2px, 2px);
+}
+.darkMode .activeBtn {
+  color: rgb(58, 58, 58);
+  border: 1px rgb(58, 58, 58) solid;
+  background-color: rgba(169, 175, 180, 0.56);
+  box-shadow: rgba(75, 74, 74, 0.74) 4px 4px 0 0;
+}
+.darkMode .smallButtonStyle {
+  background-color: #b2b2b2;
+  border: 1px solid rgb(54, 54, 54);
+  box-shadow: rgb(75, 74, 74) 4px 4px 0 0;
+  color: #4b4a4a;
+}
+.darkMode .smallButtonStyle:active {
+  box-shadow: #4b4a4a 2px 2px 0 0;
+}
+
+/*# sourceMappingURL=main.css.map */

@@ -1,0 +1,6 @@
+language: java
+jdk:
+  – oraclejdk18
+
+before_install:
+  – chmod +x gradlew

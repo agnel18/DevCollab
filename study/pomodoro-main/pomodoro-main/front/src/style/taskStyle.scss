@@ -1,0 +1,159 @@
+.taskContainer {
+  width: 25%;
+  margin: 5% 3% 15%;
+  font-family: "Book Antiqua", serif;
+
+  .flex-column {
+    display: grid;
+  }
+
+  .flex-column-task {
+    display: flex;
+    padding-bottom: 3%;
+  }
+
+  h3 {
+    color: #694b3f;
+    min-height: 5%;
+    padding: 3%;
+    font-size: 4vmin;
+    font-weight: bold;
+    background-color: rgba(251, 238, 224, 0.40);
+    border-radius: 10px;
+    margin-left: 3vmax;
+  }
+
+  h2 {
+    color: #735646;
+    min-height: 5%;
+    padding-left: 5%;
+    font-size: 4vmin;
+    font-weight: bold;
+    text-align: left;
+  }
+
+  .inputTask {
+    font-family: "Courier New", monospace;
+    color: #57392f;
+    font-size: min(2vmax,3vmin);
+    font-variant: small-caps;
+    font-weight: bold;
+
+    &.gray {
+      color: rgba(182, 173, 173, 0.62);
+      background-color: rgba(31, 30, 30, 0.47);
+      text-decoration: line-through;
+    }
+  }
+
+  input {
+    max-height: 80%;
+    border: 0;
+    background-color: rgba(189, 170, 144, 0.5);
+    border-radius: 10px;
+  }
+
+  input:focus {
+    border: none;
+    outline: none;
+    color: rgba(243, 193, 137, 0.65);
+    background-color: rgba(45, 45, 45, 0.41);
+  }
+
+  .checkbox {
+    width: 15%;
+    height: 40px;
+    overflow: hidden;
+    text-align: left;
+  }
+
+  .checkbox:not(:last-child) {
+    border-bottom: 0px solid white;
+  }
+
+  .check {
+    width: 60px;
+    height: 30px;
+    position: absolute;
+    opacity: 0;
+  }
+
+  .label span {
+    position: absolute;
+    margin-top: 15px;
+  }
+
+  .path1 {
+    stroke-dasharray: 400;
+    stroke-dashoffset: 400;
+    transition: .5s all;
+  }
+
+  .check:checked + label svg g path {
+    stroke-dashoffset: 0;
+  }
+
+  .inputTask {
+    width: 70%
+  }
+
+  .buttonStyle {
+    font-family: "Book Antiqua", serif;
+    background-color: #fbeee0;
+    border: 1px solid #735646;
+    border-radius: 30px;
+    box-shadow: #735646 2px 2px 0 0;
+    color: #735646;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1vmax;
+    padding: 0 1px;
+    line-height: 20px;
+    text-align: center;
+    text-decoration: none;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+
+  .buttonStyle:hover {
+    background-color: #fff;
+  }
+
+  .buttonStyle:active {
+    box-shadow: #735646 2px 2px 0 0;
+    transform: translate(2px, 2px);
+  }
+
+  @media (min-width: 768px) {
+    .buttonStyle {
+      min-width: 50px;
+      max-height: 40px;
+      margin-top: 10px;
+      padding: 0 1vmax;
+    }
+  }
+}
+
+.darkMode{
+  h3 {
+    color: #2f2e2e;
+    background-color: rgba(121, 119, 117, 0.59);
+  }
+  input {
+    background-color: rgb(75, 74, 74);
+  }
+
+  .inputTask {
+    font-family: "Courier New", monospace;
+    color: #838080;
+    font-size: 3vmin;
+    font-variant: small-caps;
+    font-weight: bold;
+
+    &.gray {
+      color: #4d4a4a;
+      background-color: rgba(31, 30, 30, 0.47);
+    }
+  }
+}
