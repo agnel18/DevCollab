@@ -79,24 +79,81 @@
                     </div>
                 </div>
 
-                <!-- PROJECT TIMER -->
-                <div class="mb-3">
-                    <form th:if="${project.pomodoroStart == null}"
-                          hx-post="@{'/projects/' + ${project.id} + '/pomodoro/start'}"
-                          hx-target="closest .project-card"
-                          hx-swap="outerHTML"
-                          class="d-inline">
-                        <button type="submit" class="btn btn-sm timer-btn-start" 
-                                th:classappend="${project.totalSecondsSpent > 0 ? 'btn-warning' : 'btn-success'}"
-                                th:text="${project.totalSecondsSpent > 0 ? 'Resume' : 'Start'}">Start</button>
-                    </form>
-                    <form th:if="${project.pomodoroStart != null}"
-                          hx-post="@{'/projects/' + ${project.id} + '/pomodoro/stop'}"
-                          hx-target="closest .project-card"
-                          hx-swap="outerHTML"
-                          class="d-inline">
-                        <button type="submit" class="btn btn-secondary btn-sm">Pause</button>
-                    </form>
+                <!-- POMODORO TIMER -->
+                <div class="mb-3 p-3 bg-light rounded">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <strong th:text="${project.isBreak ? '☕ Break Time' : '🍅 Focus Time'}">🍅 Focus Time</strong>
+                        <span class="badge" 
+                              th:classappend="${project.isBreak ? 'bg-info' : 'bg-success'}"
+                              th:text="${project.isBreak ? project.breakDuration + ' min' : project.pomodoroDuration + ' min'}">25 min</span>
+                    </div>
+                    
+                    <!-- CURRENT SESSION TIMER -->
+                    <div class="text-center mb-2">
+                        <div class="pomodoro-timer display-6 fw-bold"
+                             th:data-project-id="${project.id}"
+                             th:data-start="${project.pomodoroStart}"
+                             th:data-target="${project.isBreak ? project.breakDuration * 60 : project.pomodoroDuration * 60}"
+                             th:data-is-break="${project.isBreak}">00:00</div>
+                    </div>
+                    
+                    <!-- TIMER CONTROLS -->
+                    <div class="d-flex gap-2 justify-content-center">
+                        <form th:if="${project.pomodoroStart == null}"
+                              hx-post="@{'/projects/' + ${project.id} + '/pomodoro/start'}"
+                              hx-target="closest .project-card"
+                              hx-swap="outerHTML"
+                              class="d-inline">
+                            <button type="submit" class="btn btn-sm" 
+                                    th:classappend="${project.isBreak ? 'btn-info' : 'btn-success'}"
+                                    th:text="${project.isBreak ? 'Start Break' : 'Start Focus'}">Start Focus</button>
+                        </form>
+                        <form th:if="${project.pomodoroStart != null}"
+                              hx-post="@{'/projects/' + ${project.id} + '/pomodoro/stop'}"
+                              hx-target="closest .project-card"
+                              hx-swap="outerHTML"
+                              class="d-inline">
+                            <button type="submit" class="btn btn-secondary btn-sm">⏸ Pause</button>
+                        </form>
+                        
+                        <!-- Settings dropdown for duration -->
+                        <div class="dropdown d-inline" th:if="${project.pomodoroStart == null}">
+                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                ⚙️
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><h6 class="dropdown-header">Focus Duration</h6></li>
+                                <li>
+                                    <form hx-post="@{'/projects/' + ${project.id} + '/pomodoro/duration'}" 
+                                          hx-target="closest .project-card" hx-swap="outerHTML">
+                                        <input type="hidden" name="duration" value="15">
+                                        <button class="dropdown-item" type="submit">15 min</button>
+                                    </form>
+                                </li>
+                                <li>
+                                    <form hx-post="@{'/projects/' + ${project.id} + '/pomodoro/duration'}" 
+                                          hx-target="closest .project-card" hx-swap="outerHTML">
+                                        <input type="hidden" name="duration" value="25">
+                                        <button class="dropdown-item" type="submit">25 min (classic)</button>
+                                    </form>
+                                </li>
+                                <li>
+                                    <form hx-post="@{'/projects/' + ${project.id} + '/pomodoro/duration'}" 
+                                          hx-target="closest .project-card" hx-swap="outerHTML">
+                                        <input type="hidden" name="duration" value="45">
+                                        <button class="dropdown-item" type="submit">45 min</button>
+                                    </form>
+                                </li>
+                                <li>
+                                    <form hx-post="@{'/projects/' + ${project.id} + '/pomodoro/duration'}" 
+                                          hx-target="closest .project-card" hx-swap="outerHTML">
+                                        <input type="hidden" name="duration" value="60">
+                                        <button class="dropdown-item" type="submit">60 min</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
 
                 <a th:href="@{'/projects/' + ${project.id} + '/subtasks/new'}"

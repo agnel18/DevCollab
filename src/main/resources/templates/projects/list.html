@@ -750,6 +750,13 @@
         return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }
 
+    function formatPomodoroTime(seconds) {
+        if (isNaN(seconds) || seconds < 0) return '00:00';
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
     function formatTimeHuman(totalSeconds) {
         if (!totalSeconds || totalSeconds <= 0) return '0s';
         const hours = Math.floor(totalSeconds / 3600);
@@ -765,6 +772,41 @@
     }
 
     function updateTimers() {
+        // Update Pomodoro countdown timers
+        document.querySelectorAll('.pomodoro-timer[data-start]').forEach(timer => {
+            const startTime = timer.dataset.start;
+            if (!startTime || startTime === 'null') {
+                const target = parseInt(timer.dataset.target || 1500);
+                timer.textContent = formatPomodoroTime(target);
+                return;
+            }
+            
+            const start = new Date(startTime).getTime();
+            if (isNaN(start)) return;
+
+            const target = parseInt(timer.dataset.target || 1500); // Default 25 min
+            const now = new Date().getTime();
+            const elapsedSeconds = Math.floor((now - start) / 1000);
+            const remainingSeconds = Math.max(0, target - elapsedSeconds);
+            
+            timer.textContent = formatPomodoroTime(remainingSeconds);
+            
+            // Check if timer completed
+            if (remainingSeconds === 0 && !timer.dataset.notified) {
+                timer.dataset.notified = 'true';
+                const isBreak = timer.dataset.isBreak === 'true';
+                const message = isBreak ? 'Break time is over! Ready to focus?' : 'Focus session complete! Time for a break! 🎉';
+                showBrowserNotification(message, 'Pomodoro Complete');
+                showToast(message, 'success');
+                
+                // Play sound notification (optional)
+                try {
+                    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBCh+z/LZhzYIHGSt6+OJOggQT6fg7r58IAMPZr7s56xWFQlXsObxs2kbBDBwzPLTgisFJHfJ8N2MOw==');
+                    audio.play().catch(() => {});
+                } catch(e) {}
+            }
+        });
+
         // Update running project timers
         document.querySelectorAll('.project-timer[data-start]').forEach(timer => {
             const startTime = timer.dataset.start;

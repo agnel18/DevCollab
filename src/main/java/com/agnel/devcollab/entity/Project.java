@@ -35,6 +35,11 @@ public class Project {
 
     private LocalDateTime pomodoroStart;
     private long totalSecondsSpent = 0; // Changed to seconds for accurate HH:MM:SS display
+    
+    // Pomodoro cycle settings
+    private int pomodoroDuration = 25; // Work duration in minutes (default 25)
+    private int breakDuration = 5; // Break duration in minutes (default 5)
+    private boolean isBreak = false; // Track if current timer is a break
 
     // === Getters & Setters ===
     public Long getId() { return id; }
@@ -70,5 +75,20 @@ public class Project {
 
     public long getTotalSubtaskSeconds() {
         return subtasks.stream().mapToLong(Subtask::getTotalSecondsSpent).sum();
+    }
+
+    // Pomodoro getters/setters
+    public int getPomodoroDuration() { return pomodoroDuration; }
+    public void setPomodoroDuration(int duration) { this.pomodoroDuration = duration; }
+    
+    public int getBreakDuration() { return breakDuration; }
+    public void setBreakDuration(int duration) { this.breakDuration = duration; }
+    
+    public boolean isBreak() { return isBreak; }
+    public void setBreak(boolean isBreak) { this.isBreak = isBreak; }
+    
+    // Helper method to get current timer target in seconds
+    public long getCurrentTimerTarget() {
+        return (isBreak ? breakDuration : pomodoroDuration) * 60L;
     }
 }

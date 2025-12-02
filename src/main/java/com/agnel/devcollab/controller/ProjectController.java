@@ -400,6 +400,36 @@ public class ProjectController {
         return "redirect:/projects";
     }
 
+    @PostMapping("/projects/{id}/pomodoro/duration")
+    @PreAuthorize("permitAll()")
+    public String setPomodoroDuration(@PathVariable Long id, 
+                                      @RequestParam int duration,
+                                      Authentication auth, 
+                                      HttpSession session) {
+        boolean isGuest = (auth == null || !auth.isAuthenticated());
+        Project project;
+
+        if (isGuest) {
+            List<Project> projects = getGuestProjects(session);
+            project = projects.stream()
+                .filter(p -> p.getId() != null && p.getId().equals(id))
+                .findFirst().orElse(null);
+        } else {
+            project = projectRepository.findById(id).orElse(null);
+        }
+
+        if (project != null) {
+            project.setPomodoroDuration(duration);
+            // Set break proportionally (1:5 ratio - for every 25 min work, 5 min break)
+            project.setBreakDuration(Math.max(5, duration / 5));
+            
+            if (!isGuest) {
+                projectRepository.save(project);
+            }
+        }
+
+        return "redirect:/projects";
+    }
 
     @PostMapping("/projects/{projectId}/subtasks")
     @PreAuthorize("permitAll()")
@@ -458,20 +488,33 @@ public class ProjectController {
         if (project == null) return;
 
         if (start) {
+            // Auto-move to DOING when timer starts (only if starting work session, not break)
+            if (project.getStatus() == Project.Status.TODO && !project.isBreak()) {
+                project.setStatus(Project.Status.DOING);
+            }
             project.setPomodoroStart(LocalDateTime.now());
         } else {
             LocalDateTime startTime = project.getPomodoroStart();
             if (startTime != null) {
-                // Calculate elapsed time in seconds, then convert to minutes (more accurate)
+                // Calculate elapsed time in seconds
                 long elapsedSeconds = java.time.Duration.between(startTime, LocalDateTime.now()).getSeconds();
-                // Always record at least 1 minute if timer was running (even if less than 1 minute elapsed)
-                // This ensures time is never lost
-                long minutes = 1; // Minimum 1 minute
-                if (elapsedSeconds > 60) {
-                    // For times over 1 minute, round up to capture partial minutes
-                    minutes = (elapsedSeconds + 59) / 60;
+                // Always record at least 1 second if timer was running
+                if (elapsedSeconds < 1) {
+                    elapsedSeconds = 1;
                 }
-                project.setTotalMinutesSpent(project.getTotalMinutesSpent() + (int) minutes);
+                
+                // Only count work time, not break time
+                if (!project.isBreak()) {
+                    project.setTotalSecondsSpent(project.getTotalSecondsSpent() + elapsedSeconds);
+                }
+                
+                // Check if timer naturally completed (elapsed >= target duration)
+                long targetSeconds = project.isBreak() ? project.getBreakDuration() * 60L : project.getPomodoroDuration() * 60L;
+                if (elapsedSeconds >= targetSeconds - 5) { // Within 5 seconds of completion
+                    // Auto-toggle to next cycle
+                    project.setBreak(!project.isBreak());
+                }
+                
                 project.setPomodoroStart(null);
             }
         }
@@ -525,21 +568,18 @@ public class ProjectController {
         } else {
             LocalDateTime startTime = subtask.getPomodoroStart();
             if (startTime != null) {
-                // Calculate elapsed time in seconds, then convert to minutes (more accurate)
+                // Calculate elapsed time in seconds
                 long elapsedSeconds = java.time.Duration.between(startTime, LocalDateTime.now()).getSeconds();
-                // Always record at least 1 minute if timer was running (even if less than 1 minute elapsed)
-                // This ensures time is never lost
-                long minutes = 1; // Minimum 1 minute
-                if (elapsedSeconds > 60) {
-                    // For times over 1 minute, round up to capture partial minutes
-                    minutes = (elapsedSeconds + 59) / 60;
+                // Always record at least 1 second if timer was running
+                if (elapsedSeconds < 1) {
+                    elapsedSeconds = 1;
                 }
                 
                 // Add elapsed time to subtask total
-                subtask.setTotalMinutesSpent(subtask.getTotalMinutesSpent() + minutes);
+                subtask.setTotalSecondsSpent(subtask.getTotalSecondsSpent() + elapsedSeconds);
                 
                 // Add the SAME elapsed time to project total (subtask time contributes to project)
-                project.setTotalMinutesSpent(project.getTotalMinutesSpent() + (int) minutes);
+                project.setTotalSecondsSpent(project.getTotalSecondsSpent() + elapsedSeconds);
                 
                 subtask.setPomodoroStart(null);
             }
