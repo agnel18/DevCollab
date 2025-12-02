@@ -18,6 +18,19 @@ public class Subtask {
 
     private LocalDateTime pomodoroStart;
     private long totalSecondsSpent = 0; // Changed to seconds for accurate HH:MM:SS display
+    
+    // Pomodoro estimation (1-5 Pomodoros, default 1)
+    @Column(nullable = false)
+    private Integer estimatedPomodoros = 1;
+    
+    // Track completed Pomodoros for this subtask
+    private Integer completedPomodoros = 0;
+    
+    // Track current Pomodoro cycle (1-4, resets after long break)
+    private Integer currentCycle = 1;
+    
+    // Is subtask marked as completed?
+    private Boolean completed = false;
 
     // Getters & Setters
     public Long getId() { return id; }
@@ -35,7 +48,45 @@ public class Subtask {
     public long getTotalSecondsSpent() { return totalSecondsSpent; }
     public void setTotalSecondsSpent(long seconds) { this.totalSecondsSpent = seconds; }
     
+    public Integer getEstimatedPomodoros() { return estimatedPomodoros; }
+    public void setEstimatedPomodoros(Integer estimatedPomodoros) { 
+        this.estimatedPomodoros = estimatedPomodoros; 
+    }
+    
+    public Integer getCompletedPomodoros() { return completedPomodoros; }
+    public void setCompletedPomodoros(Integer completedPomodoros) { 
+        this.completedPomodoros = completedPomodoros; 
+    }
+    
+    public Integer getCurrentCycle() { return currentCycle; }
+    public void setCurrentCycle(Integer currentCycle) { 
+        this.currentCycle = currentCycle; 
+    }
+    
+    public Boolean getCompleted() { return completed; }
+    public void setCompleted(Boolean completed) { 
+        this.completed = completed; 
+    }
+    
     // Convenience methods for backward compatibility
     public long getTotalMinutesSpent() { return totalSecondsSpent / 60; }
     public void setTotalMinutesSpent(long minutes) { this.totalSecondsSpent = minutes * 60; }
+    
+    // Helper methods
+    public double getCompletionPercentage() {
+        if (estimatedPomodoros == 0) return 0.0;
+        return Math.min(100.0, (completedPomodoros * 100.0) / estimatedPomodoros);
+    }
+    
+    public boolean needsLongBreak() {
+        return currentCycle > 4;
+    }
+    
+    public void incrementCycle() {
+        if (currentCycle >= 4) {
+            currentCycle = 1; // Reset after long break
+        } else {
+            currentCycle++;
+        }
+    }
 }
