@@ -190,10 +190,11 @@ public class PomodoroService {
         message.put("subtaskName", subtask.getName());
         message.put("userId", user.getId());
         message.put("username", user.getEmail());
-        message.put("projectId", subtask.getProject().getId());
+        message.put("taskId", subtask.getTask().getId());
+        message.put("projectId", subtask.getTask().getProject().getId());
         message.put("timestamp", LocalDateTime.now().toString());
         
-        messagingTemplate.convertAndSend("/topic/pomodoro/" + subtask.getProject().getId(), message);
+        messagingTemplate.convertAndSend("/topic/pomodoro/" + subtask.getTask().getProject().getId(), message);
     }
     
     /**

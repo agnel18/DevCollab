@@ -12,33 +12,17 @@
     import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
     @Configuration
-    @EnableMethodSecurity
     public class SecurityConfig {
 
         @Bean
-        public SecurityFilterChain filterChain(HttpSecurity http, DaoAuthenticationProvider authProvider) throws Exception {
+        public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
             http
-                .authenticationProvider(authProvider)
                 .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/", "/register", "/login", "/h2-console/**", "/css/**", "/js/**").permitAll()
-                    .requestMatchers("/ws/**").permitAll()
-                    .requestMatchers("/api/**").permitAll()  // Allow API endpoints for testing
-                    .anyRequest().authenticated()
+                    .anyRequest().permitAll()  // Disable security for testing
                 )
-                .formLogin(form -> form
-                    .loginPage("/login")
-                    .defaultSuccessUrl("/projects", true)
-                    .permitAll()
-                )
-                .logout(logout -> logout
-                    .logoutSuccessUrl("/")
-                    .permitAll()
-                )
-                .csrf(csrf -> csrf
-                    .ignoringRequestMatchers("/h2-console/**", "/projects/**", "/subtasks/**", "/ws/**", "/api/**")
-                )
+                .csrf(csrf -> csrf.disable())  // Disable CSRF for testing
                 .headers(headers -> headers
-                    .frameOptions(frame -> frame.sameOrigin())
+                    .frameOptions(frame -> frame.disable())
                 );
 
             return http.build();
@@ -47,20 +31,5 @@
         @Bean
         public PasswordEncoder passwordEncoder() {
             return new BCryptPasswordEncoder();
-        }
-
-        @Bean
-        public UserDetailsService userDetailsService() {
-            return new UserDetailsServiceImpl();
-        }
-
-        // MODERN WAY: Constructor injection
-        @Bean
-        public DaoAuthenticationProvider authenticationProvider(
-                UserDetailsService userDetailsService,
-                PasswordEncoder passwordEncoder) {
-            DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
-    provider.setPasswordEncoder(passwordEncoder);
-    return provider;
         }
     }

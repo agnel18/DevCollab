@@ -45,6 +45,6 @@ public interface PomodoroLogRepository extends JpaRepository<PomodoroLog, Long> 
     Long countCompletedPomodorosByUserId(@Param("userId") Long userId);
     
     // Find recent Pomodoros for team visibility
-    @Query("SELECT p FROM PomodoroLog p WHERE p.subtask.project.id = :projectId ORDER BY p.startTime DESC")
+    @Query("SELECT p FROM PomodoroLog p WHERE p.subtask.task.project.id = :projectId ORDER BY p.startTime DESC")
     List<PomodoroLog> findRecentByProjectId(@Param("projectId") Long projectId);
 }

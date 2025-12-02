@@ -17,6 +17,9 @@ public class TimeEntry {
     private Project project;
 
     @ManyToOne
+    private Task task;
+
+    @ManyToOne
     private Subtask subtask;
 
     private String description;
@@ -39,6 +42,8 @@ public class TimeEntry {
     public void setUser(User user) { this.user = user; }
     public Project getProject() { return project; }
     public void setProject(Project project) { this.project = project; }
+    public Task getTask() { return task; }
+    public void setTask(Task task) { this.task = task; }
     public Subtask getSubtask() { return subtask; }
     public void setSubtask(Subtask subtask) { this.subtask = subtask; }
     public String getDescription() { return description; }

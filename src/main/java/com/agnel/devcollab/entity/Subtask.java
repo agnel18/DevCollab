@@ -13,8 +13,8 @@ public class Subtask {
     private String name;
 
     @ManyToOne
-    @JoinColumn(name = "project_id")
-    private Project project;
+    @JoinColumn(name = "task_id")
+    private Task task;
 
     private LocalDateTime pomodoroStart;
     private long totalSecondsSpent = 0; // Changed to seconds for accurate HH:MM:SS display
@@ -39,8 +39,8 @@ public class Subtask {
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 
-    public Project getProject() { return project; }
-    public void setProject(Project project) { this.project = project; }
+    public Task getTask() { return task; }
+    public void setTask(Task task) { this.task = task; }
 
     public LocalDateTime getPomodoroStart() { return pomodoroStart; }
     public void setPomodoroStart(LocalDateTime start) { this.pomodoroStart = start; }
@@ -88,5 +88,10 @@ public class Subtask {
         } else {
             currentCycle++;
         }
+    }
+    
+    // Allow editing at any status
+    public boolean isEditable() {
+        return true; // Always editable, even when completed
     }
 }

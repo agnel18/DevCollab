@@ -2,11 +2,11 @@ package com.agnel.devcollab.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 @Entity
-public class Project {
+public class Task {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -15,15 +15,12 @@ public class Project {
     private String name;
     private String description;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
     @ManyToOne
-    @JoinColumn(name = "owner_id")
-    private User owner;
+    @JoinColumn(name = "project_id")
+    private Project project;
 
-    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Task> tasks = new ArrayList<>();
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Subtask> subtasks = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -33,21 +30,23 @@ public class Project {
         TODO, DOING, DONE
     }
 
+    // Pomodoro timer support at Task level
     private LocalDateTime pomodoroStart;
-    private long totalSecondsSpent = 0; // Changed to seconds for accurate HH:MM:SS display
+    private long totalSecondsSpent = 0;
     
-    // Pomodoro cycle settings
-    private int pomodoroDuration = 25; // Work duration in minutes (default 25)
-    private int breakDuration = 5; // Break duration in minutes (default 5)
+    // Pomodoro cycle settings (inherited from Project or customizable)
+    private int pomodoroDuration = 25; // Work duration in minutes
+    private int breakDuration = 5; // Break duration in minutes
     private boolean isBreak = false; // Track if current timer is a break
     
-    // Track completion and allow reopening
-    private LocalDateTime completedAt;
-    
-    // Track Pomodoro cycles at project level
+    // Track Pomodoro cycles
     private Integer estimatedPomodoros = 1;
     private Integer completedPomodoros = 0;
     private Integer currentCycle = 1;
+    
+    // Allow editing even when DONE
+    private LocalDateTime completedAt;
+    private LocalDateTime createdAt;
 
     // === Getters & Setters ===
     public Long getId() { return id; }
@@ -59,11 +58,11 @@ public class Project {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public Project getProject() { return project; }
+    public void setProject(Project project) { this.project = project; }
 
-    public User getOwner() { return owner; }
-    public void setOwner(User owner) { this.owner = owner; }
+    public List<Subtask> getSubtasks() { return subtasks; }
+    public void setSubtasks(List<Subtask> subtasks) { this.subtasks = subtasks; }
 
     public Status getStatus() { return status; }
     public void setStatus(Status status) { 
@@ -71,7 +70,7 @@ public class Project {
         if (status == Status.DONE && completedAt == null) {
             completedAt = LocalDateTime.now();
         } else if (status != Status.DONE) {
-            completedAt = null; // Allow reopening projects
+            completedAt = null; // Allow reopening tasks
         }
     }
 
@@ -80,51 +79,48 @@ public class Project {
 
     public long getTotalSecondsSpent() { return totalSecondsSpent; }
     public void setTotalSecondsSpent(long seconds) { this.totalSecondsSpent = seconds; }
-    
-    // Convenience methods for backward compatibility
-    public long getTotalMinutesSpent() { return totalSecondsSpent / 60; }
-    public void setTotalMinutesSpent(long minutes) { this.totalSecondsSpent = minutes * 60; }
 
-    public List<Task> getTasks() { return tasks; }
-    public void setTasks(List<Task> tasks) { this.tasks = tasks; }
+    public int getPomodoroDuration() { return pomodoroDuration; }
+    public void setPomodoroDuration(int duration) { this.pomodoroDuration = duration; }
 
-    // Calculate total time from all tasks (including their subtasks)
-    public long getTotalTaskSeconds() {
-        return tasks.stream().mapToLong(Task::getCombinedSecondsSpent).sum();
-    }
-    
-    // Get combined time (project's own time + all task times + all subtask times)
-    public long getCombinedSecondsSpent() {
-        return totalSecondsSpent + getTotalTaskSeconds();
-    }
-    
-    public LocalDateTime getCompletedAt() { return completedAt; }
-    public void setCompletedAt(LocalDateTime completedAt) { this.completedAt = completedAt; }
-    
+    public int getBreakDuration() { return breakDuration; }
+    public void setBreakDuration(int duration) { this.breakDuration = duration; }
+
+    public boolean isBreak() { return isBreak; }
+    public void setBreak(boolean isBreak) { this.isBreak = isBreak; }
+
     public Integer getEstimatedPomodoros() { return estimatedPomodoros; }
     public void setEstimatedPomodoros(Integer estimatedPomodoros) { 
         this.estimatedPomodoros = estimatedPomodoros; 
     }
-    
+
     public Integer getCompletedPomodoros() { return completedPomodoros; }
     public void setCompletedPomodoros(Integer completedPomodoros) { 
         this.completedPomodoros = completedPomodoros; 
     }
-    
+
     public Integer getCurrentCycle() { return currentCycle; }
     public void setCurrentCycle(Integer currentCycle) { 
         this.currentCycle = currentCycle; 
     }
 
-    // Pomodoro getters/setters
-    public int getPomodoroDuration() { return pomodoroDuration; }
-    public void setPomodoroDuration(int duration) { this.pomodoroDuration = duration; }
+    public LocalDateTime getCompletedAt() { return completedAt; }
+    public void setCompletedAt(LocalDateTime completedAt) { this.completedAt = completedAt; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    // === Helper Methods ===
     
-    public int getBreakDuration() { return breakDuration; }
-    public void setBreakDuration(int duration) { this.breakDuration = duration; }
+    // Calculate total time from all subtasks
+    public long getTotalSubtaskSeconds() {
+        return subtasks.stream().mapToLong(Subtask::getTotalSecondsSpent).sum();
+    }
     
-    public boolean isBreak() { return isBreak; }
-    public void setBreak(boolean isBreak) { this.isBreak = isBreak; }
+    // Get combined time (task's own time + subtask times)
+    public long getCombinedSecondsSpent() {
+        return totalSecondsSpent + getTotalSubtaskSeconds();
+    }
     
     // Helper method to get current timer target in seconds
     public long getCurrentTimerTarget() {
@@ -148,8 +144,8 @@ public class Project {
         }
     }
     
-    // Allow editing at any status
+    // Check if task can be edited (always true now - even DONE tasks are editable)
     public boolean isEditable() {
-        return true; // Always editable, even when DONE
+        return true; // Allow editing at any status
     }
 }

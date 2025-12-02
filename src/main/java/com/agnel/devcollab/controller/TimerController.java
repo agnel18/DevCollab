@@ -3,10 +3,12 @@ package com.agnel.devcollab.controller;
 import com.agnel.devcollab.entity.TimeEntry;
 import com.agnel.devcollab.entity.User;
 import com.agnel.devcollab.entity.Project;
+import com.agnel.devcollab.entity.Task;
 import com.agnel.devcollab.entity.Subtask;
 import com.agnel.devcollab.repository.TimeEntryRepository;
 import com.agnel.devcollab.repository.UserRepository;
 import com.agnel.devcollab.repository.ProjectRepository;
+import com.agnel.devcollab.repository.TaskRepository;
 import com.agnel.devcollab.repository.SubtaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +31,9 @@ public class TimerController {
     private ProjectRepository projectRepository;
     
     @Autowired
+    private TaskRepository taskRepository;
+    
+    @Autowired
     private SubtaskRepository subtaskRepository;
 
     @PostMapping("/start")
@@ -43,6 +48,10 @@ public class TimerController {
         if (req.getProjectId() != null) {
             Project project = projectRepository.findById(req.getProjectId()).orElse(null);
             entry.setProject(project);
+        }
+        if (req.getTaskId() != null) {
+            Task task = taskRepository.findById(req.getTaskId()).orElse(null);
+            entry.setTask(task);
         }
         if (req.getSubtaskId() != null) {
             Subtask subtask = subtaskRepository.findById(req.getSubtaskId()).orElse(null);
@@ -83,6 +92,7 @@ public class TimerController {
 class TimerStartRequest {
     private Long userId;
     private Long projectId;
+    private Long taskId;
     private Long subtaskId;
     private String description;
     private java.util.Set<String> tags;
@@ -94,6 +104,8 @@ class TimerStartRequest {
     public void setUserId(Long userId) { this.userId = userId; }
     public Long getProjectId() { return projectId; }
     public void setProjectId(Long projectId) { this.projectId = projectId; }
+    public Long getTaskId() { return taskId; }
+    public void setTaskId(Long taskId) { this.taskId = taskId; }
     public Long getSubtaskId() { return subtaskId; }
     public void setSubtaskId(Long subtaskId) { this.subtaskId = subtaskId; }
     public String getDescription() { return description; }
