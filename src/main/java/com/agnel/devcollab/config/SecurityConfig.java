@@ -22,6 +22,7 @@
                 .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/", "/register", "/login", "/h2-console/**", "/css/**", "/js/**").permitAll()
                     .requestMatchers("/ws/**").permitAll()
+                    .requestMatchers("/api/**").permitAll()  // Allow API endpoints for testing
                     .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
@@ -34,7 +35,7 @@
                     .permitAll()
                 )
                 .csrf(csrf -> csrf
-                    .ignoringRequestMatchers("/h2-console/**", "/projects/**", "/subtasks/**", "/ws/**")
+                    .ignoringRequestMatchers("/h2-console/**", "/projects/**", "/subtasks/**", "/ws/**", "/api/**")
                 )
                 .headers(headers -> headers
                     .frameOptions(frame -> frame.sameOrigin())
