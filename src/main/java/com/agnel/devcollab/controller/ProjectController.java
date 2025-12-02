@@ -326,6 +326,65 @@ public class ProjectController {
 
         return "redirect:/projects";
     }
+
+    @PostMapping("/projects/{id}/status/ajax")
+    @PreAuthorize("permitAll()")
+    @ResponseBody
+    public ResponseEntity<String> updateStatusAjax(@PathVariable Long id,
+                                                   @RequestParam Status status,
+                                                   Authentication auth,
+                                                   HttpSession session,
+                                                   @RequestHeader(value = "X-User-Name", required = false) String userName,
+                                                   @RequestHeader(value = "X-User-Color", required = false) String userColor) {
+        boolean isGuest = (auth == null || !auth.isAuthenticated());
+        Project project = null;
+
+        if (isGuest) {
+            @SuppressWarnings("unchecked")
+            List<Project> guestProjects = (List<Project>) session.getAttribute("guestProjects");
+            if (guestProjects != null) {
+                project = guestProjects.stream()
+                    .filter(p -> p.getId() != null && p.getId().equals(id))
+                    .findFirst()
+                    .orElse(null);
+                if (project != null) {
+                    project.setStatus(status);
+                }
+            }
+        } else {
+            project = projectRepository.findById(id).orElse(null);
+            if (project != null) {
+                project.setStatus(status);
+                projectRepository.save(project);
+            }
+        }
+
+        if (project == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // Use headers or fallback to session
+        if (userName == null) {
+            userName = getOrCreateUserName(session);
+        }
+        if (userColor == null) {
+            userColor = getOrCreateUserColor(session);
+        }
+
+        // Broadcast update via WebSocket
+        ProjectUpdate update = new ProjectUpdate(
+            project.getId(),
+            project.getName(),
+            project.getStatus(),
+            project.getPomodoroStart(),
+            "MOVED",
+            userName,
+            userColor
+        );
+        messagingTemplate.convertAndSend("/topic/project-updates", update);
+
+        return ResponseEntity.ok("Status updated");
+    }
     
     @PostMapping("/projects/{id}/pomodoro/start")
     @PreAuthorize("permitAll()")
