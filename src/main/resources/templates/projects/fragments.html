@@ -54,67 +54,70 @@
 
             <!-- DOING Column -->
             <div th:if="${project.status == T(com.agnel.devcollab.entity.Project.Status).DOING}">
-                <!-- PROJECT TITLE + TOTAL TIME -->
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <h6 class="mb-0" th:text="${project.name}">Learn Guitar</h6>
-                    <div class="text-end">
-                        <strong>Total Time:</strong><br>
-                        <!-- LIVE TIMER WHEN RUNNING -->
-                        <span class="project-timer text-success"
-                            th:if="${project.pomodoroStart != null}"
-                            th:data-start="${project.pomodoroStart}"
-                            th:data-total-seconds="${project.totalSecondsSpent}"
-                            th:data-project-id="${project.id}">00:00:00</span>
+                <!-- PROJECT HEADER -->
+                <h6 class="mb-2" th:text="${project.name}">Learn Guitar</h6>
+                <p class="text-muted small mb-3" th:if="${project.description}" th:text="${project.description}">Description</p>
 
-                        <!-- STATIC TIME WHEN PAUSED -->
-                        <span class="project-timer-paused text-muted"
-                            th:unless="${project.pomodoroStart != null}"
-                            th:data-total-seconds="${project.totalSecondsSpent}"
-                            th:data-project-id="${project.id}">00:00:00</span>
-                    </div>
-                </div>
-
-                <!-- POMODORO TIMER -->
-                <div class="mb-3 p-3 bg-light rounded">
+                <!-- MAIN TIMER SECTION -->
+                <div class="mb-3 p-3 rounded" style="background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <strong th:text="${project.isBreak ? '☕ Break Time' : '🍅 Focus Time'}">🍅 Focus Time</strong>
-                        <span class="badge" 
-                              th:classappend="${project.isBreak ? 'bg-info' : 'bg-success'}"
-                              th:text="${project.isBreak ? project.breakDuration + ' min' : project.pomodoroDuration + ' min'}">25 min</span>
+                        <div>
+                            <small class="text-muted d-block">Session Timer</small>
+                            <div class="pomodoro-timer fs-3 fw-bold"
+                                 th:data-project-id="${project.id}"
+                                 th:data-start="${project.pomodoroStart}"
+                                 th:data-target="${project.isBreak ? project.breakDuration * 60 : project.pomodoroDuration * 60}"
+                                 th:data-is-break="${project.isBreak}"
+                                 th:text="${project.pomodoroStart != null ? '00:00' : '—:—'}">25:00</div>
+                            <small class="badge" 
+                                  th:classappend="${project.isBreak ? 'bg-info' : 'bg-success'}"
+                                  th:text="${project.isBreak ? '☕ ' + project.breakDuration + ' min break' : '🍅 ' + project.pomodoroDuration + ' min focus'}">
+                                🍅 25 min focus
+                            </small>
+                        </div>
+                        <div class="text-end">
+                            <small class="text-muted d-block">Total Time</small>
+                            <div class="fs-5 fw-bold">
+                                <span class="project-timer"
+                                    th:if="${project.pomodoroStart != null}"
+                                    th:data-start="${project.pomodoroStart}"
+                                    th:data-total-seconds="${project.totalSecondsSpent}"
+                                    th:data-project-id="${project.id}">00:00:00</span>
+                                <span class="project-timer-paused"
+                                    th:unless="${project.pomodoroStart != null}"
+                                    th:data-total-seconds="${project.totalSecondsSpent}"
+                                    th:data-project-id="${project.id}">00:00:00</span>
+                            </div>
+                        </div>
                     </div>
                     
-                    <!-- CURRENT SESSION TIMER -->
-                    <div class="text-center mb-2">
-                        <div class="pomodoro-timer display-6 fw-bold"
-                             th:data-project-id="${project.id}"
-                             th:data-start="${project.pomodoroStart}"
-                             th:data-target="${project.isBreak ? project.breakDuration * 60 : project.pomodoroDuration * 60}"
-                             th:data-is-break="${project.isBreak}">00:00</div>
-                    </div>
-                    
-                    <!-- TIMER CONTROLS -->
-                    <div class="d-flex gap-2 justify-content-center">
+                    <!-- CONTROLS -->
+                    <div class="d-flex gap-2 align-items-center">
                         <form th:if="${project.pomodoroStart == null}"
                               th:action="@{'/projects/' + ${project.id} + '/pomodoro/start'}"
                               method="post"
-                              class="d-inline">
-                            <button type="submit" class="btn btn-sm" 
+                              class="flex-grow-1">
+                            <button type="submit" class="btn w-100" 
                                     th:classappend="${project.isBreak ? 'btn-info' : 'btn-success'}"
-                                    th:text="${project.isBreak ? 'Start Break' : 'Start Focus'}">Start Focus</button>
+                                    th:text="${project.isBreak ? '▶ Start Break' : '▶ Start Focus'}">▶ Start Focus</button>
                         </form>
                         <form th:if="${project.pomodoroStart != null}"
                               th:action="@{'/projects/' + ${project.id} + '/pomodoro/stop'}"
                               method="post"
-                              class="d-inline">
-                            <button type="submit" class="btn btn-secondary btn-sm">⏸ Pause</button>
+                              class="flex-grow-1">
+                            <button type="submit" class="btn btn-secondary w-100">⏸ Pause</button>
                         </form>
                         
-                        <!-- Settings dropdown for duration -->
-                        <div class="dropdown d-inline" th:if="${project.pomodoroStart == null}">
-                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <!-- Settings -->
+                        <div class="dropdown" th:if="${project.pomodoroStart == null}">
+                            <button class="btn btn-outline-secondary dropdown-toggle" 
+                                    type="button" 
+                                    th:id="'settings-' + ${project.id}"
+                                    data-bs-toggle="dropdown" 
+                                    aria-expanded="false">
                                 ⚙️
                             </button>
-                            <ul class="dropdown-menu">
+                            <ul class="dropdown-menu" th:aria-labelledby="'settings-' + ${project.id}">
                                 <li><h6 class="dropdown-header">Focus Duration</h6></li>
                                 <li>
                                     <form th:action="@{'/projects/' + ${project.id} + '/pomodoro/duration'}" method="post">
@@ -125,7 +128,7 @@
                                 <li>
                                     <form th:action="@{'/projects/' + ${project.id} + '/pomodoro/duration'}" method="post">
                                         <input type="hidden" name="duration" value="25">
-                                        <button class="dropdown-item" type="submit">25 min (classic)</button>
+                                        <button class="dropdown-item" type="submit">25 min ⭐</button>
                                     </form>
                                 </li>
                                 <li>
@@ -145,59 +148,46 @@
                     </div>
                 </div>
 
-                <a th:href="@{'/projects/' + ${project.id} + '/subtasks/new'}"
-                   class="btn btn-outline-primary btn-sm mb-3">+ Add Subtask</a>
-
-                <!-- SUBTASKS -->
-                <div th:each="subtask : ${project.subtasks}" class="subtask-item p-3 rounded mb-2">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <strong th:text="${subtask.name}">Practice Scales</strong>
-                        <div>
-                            <!-- Live timer when running -->
-                            <span class="subtask-timer text-success"
-                                th:if="${subtask.pomodoroStart != null}"
-                                th:data-start="${subtask.pomodoroStart}"
-                                th:data-total-seconds="${subtask.totalSecondsSpent}"
-                                th:data-subtask-id="${subtask.id}">00:00:00</span>
-
-                            <!-- Static time when paused -->
-                            <span class="subtask-timer-paused text-muted"
-                                th:unless="${subtask.pomodoroStart != null}"
-                                th:data-total-seconds="${subtask.totalSecondsSpent}"
-                                th:data-subtask-id="${subtask.id}">00:00:00</span>
+                <!-- SUBTASKS SECTION -->
+                <div th:if="${!project.subtasks.isEmpty()}" class="mb-3">
+                    <small class="text-muted fw-bold d-block mb-2">SUBTASKS</small>
+                    <div th:each="subtask : ${project.subtasks}" class="subtask-item p-2 rounded mb-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="flex-grow-1">
+                                <span th:text="${subtask.name}">Practice Scales</span>
+                            </div>
+                            <div class="d-flex gap-2 align-items-center">
+                                <small class="subtask-timer-paused text-muted"
+                                    th:unless="${subtask.pomodoroStart != null}"
+                                    th:data-total-seconds="${subtask.totalSecondsSpent}"
+                                    th:data-subtask-id="${subtask.id}">00:00:00</small>
+                                <small class="subtask-timer text-success fw-bold"
+                                    th:if="${subtask.pomodoroStart != null}"
+                                    th:data-start="${subtask.pomodoroStart}"
+                                    th:data-total-seconds="${subtask.totalSecondsSpent}"
+                                    th:data-subtask-id="${subtask.id}">00:00:00</small>
+                            </div>
                         </div>
-                    </div>
-                    <div class="mt-2">
-                        <form th:if="${subtask.pomodoroStart == null}"
-                              th:action="@{'/subtasks/' + ${subtask.id} + '/pomodoro/start'}" 
-                              method="post"
-                              class="d-inline">
-                            <button type="submit" class="btn btn-sm"
-                                    th:classappend="${subtask.totalSecondsSpent > 0 ? 'btn-warning' : 'btn-success'}"
-                                    th:text="${subtask.totalSecondsSpent > 0 ? 'Resume' : 'Start'}">Start</button>
-                        </form>
-                        <form th:if="${subtask.pomodoroStart != null}"
-                              th:action="@{'/subtasks/' + ${subtask.id} + '/pomodoro/stop'}" 
-                              method="post"
-                              class="d-inline">
-                            <button type="submit" class="btn btn-secondary btn-sm">Pause</button>
-                        </form>
                     </div>
                 </div>
 
+                <!-- ADD SUBTASK -->
+                <a th:href="@{'/projects/' + ${project.id} + '/subtasks/new'}"
+                   class="btn btn-sm btn-outline-primary mb-3 w-100">+ Add Subtask</a>
+
                 <!-- ACTION BUTTONS -->
-                <div class="mt-4 d-flex gap-2 flex-wrap">
-                    <form th:action="@{'/projects/' + ${project.id} + '/status'}" method="post">
+                <div class="d-flex gap-2">
+                    <form th:action="@{'/projects/' + ${project.id} + '/status'}" method="post" class="flex-grow-1">
                         <input type="hidden" name="status" value="DONE">
-                        <button type="submit" class="btn btn-success">Done</button>
+                        <button type="submit" class="btn btn-success w-100">✓ Done</button>
                     </form>
                     <form th:action="@{'/projects/' + ${project.id} + '/status'}" method="post">
                         <input type="hidden" name="status" value="TODO">
-                        <button type="submit" class="btn btn-outline-secondary">Back</button>
+                        <button type="submit" class="btn btn-outline-secondary">← Back</button>
                     </form>
                     <form th:action="@{'/projects/' + ${project.id} + '/delete'}" method="post"
                           onsubmit="return confirm('Delete this project?')">
-                        <button type="submit" class="btn btn-danger">Delete</button>
+                        <button type="submit" class="btn btn-outline-danger">🗑</button>
                     </form>
                 </div>
             </div>
