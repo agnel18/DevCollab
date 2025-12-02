@@ -42,16 +42,12 @@
                 </div>
 
                 <div class="mt-3 d-flex gap-2">
-                    <form hx-post="@{'/projects/' + ${project.id} + '/pomodoro/start'}"
-                          hx-target="closest .project-card" 
-                          hx-swap="outerHTML">
-                        <button class="btn btn-success btn-sm">🍅 Start Focus</button>
+                    <form th:action="@{'/projects/' + ${project.id} + '/pomodoro/start'}" method="post">
+                        <button type="submit" class="btn btn-success btn-sm">🍅 Start Focus</button>
                     </form>
-                    <form hx-delete="@{'/projects/' + ${project.id}}"
-                          hx-target="closest .project-card" 
-                          hx-swap="outerHTML"
-                          hx-confirm="Delete this project?">
-                        <button class="btn btn-danger btn-sm">Delete</button>
+                    <form th:action="@{'/projects/' + ${project.id} + '/delete'}" method="post"
+                          onsubmit="return confirm('Delete this project?')">
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                     </form>
                 </div>
             </div>
@@ -99,18 +95,16 @@
                     <!-- TIMER CONTROLS -->
                     <div class="d-flex gap-2 justify-content-center">
                         <form th:if="${project.pomodoroStart == null}"
-                              hx-post="@{'/projects/' + ${project.id} + '/pomodoro/start'}"
-                              hx-target="closest .project-card"
-                              hx-swap="outerHTML"
+                              th:action="@{'/projects/' + ${project.id} + '/pomodoro/start'}"
+                              method="post"
                               class="d-inline">
                             <button type="submit" class="btn btn-sm" 
                                     th:classappend="${project.isBreak ? 'btn-info' : 'btn-success'}"
                                     th:text="${project.isBreak ? 'Start Break' : 'Start Focus'}">Start Focus</button>
                         </form>
                         <form th:if="${project.pomodoroStart != null}"
-                              hx-post="@{'/projects/' + ${project.id} + '/pomodoro/stop'}"
-                              hx-target="closest .project-card"
-                              hx-swap="outerHTML"
+                              th:action="@{'/projects/' + ${project.id} + '/pomodoro/stop'}"
+                              method="post"
                               class="d-inline">
                             <button type="submit" class="btn btn-secondary btn-sm">⏸ Pause</button>
                         </form>
@@ -123,29 +117,25 @@
                             <ul class="dropdown-menu">
                                 <li><h6 class="dropdown-header">Focus Duration</h6></li>
                                 <li>
-                                    <form hx-post="@{'/projects/' + ${project.id} + '/pomodoro/duration'}" 
-                                          hx-target="closest .project-card" hx-swap="outerHTML">
+                                    <form th:action="@{'/projects/' + ${project.id} + '/pomodoro/duration'}" method="post">
                                         <input type="hidden" name="duration" value="15">
                                         <button class="dropdown-item" type="submit">15 min</button>
                                     </form>
                                 </li>
                                 <li>
-                                    <form hx-post="@{'/projects/' + ${project.id} + '/pomodoro/duration'}" 
-                                          hx-target="closest .project-card" hx-swap="outerHTML">
+                                    <form th:action="@{'/projects/' + ${project.id} + '/pomodoro/duration'}" method="post">
                                         <input type="hidden" name="duration" value="25">
                                         <button class="dropdown-item" type="submit">25 min (classic)</button>
                                     </form>
                                 </li>
                                 <li>
-                                    <form hx-post="@{'/projects/' + ${project.id} + '/pomodoro/duration'}" 
-                                          hx-target="closest .project-card" hx-swap="outerHTML">
+                                    <form th:action="@{'/projects/' + ${project.id} + '/pomodoro/duration'}" method="post">
                                         <input type="hidden" name="duration" value="45">
                                         <button class="dropdown-item" type="submit">45 min</button>
                                     </form>
                                 </li>
                                 <li>
-                                    <form hx-post="@{'/projects/' + ${project.id} + '/pomodoro/duration'}" 
-                                          hx-target="closest .project-card" hx-swap="outerHTML">
+                                    <form th:action="@{'/projects/' + ${project.id} + '/pomodoro/duration'}" method="post">
                                         <input type="hidden" name="duration" value="60">
                                         <button class="dropdown-item" type="submit">60 min</button>
                                     </form>
@@ -197,23 +187,17 @@
 
                 <!-- ACTION BUTTONS -->
                 <div class="mt-4 d-flex gap-2 flex-wrap">
-                    <form hx-put="@{'/projects/' + ${project.id} + '/status'}"
-                          hx-target="closest .project-card" 
-                          hx-swap="outerHTML">
+                    <form th:action="@{'/projects/' + ${project.id} + '/status'}" method="post">
                         <input type="hidden" name="status" value="DONE">
-                        <button class="btn btn-success">Done</button>
+                        <button type="submit" class="btn btn-success">Done</button>
                     </form>
-                    <form hx-put="@{'/projects/' + ${project.id} + '/status'}"
-                          hx-target="closest .project-card" 
-                          hx-swap="outerHTML">
+                    <form th:action="@{'/projects/' + ${project.id} + '/status'}" method="post">
                         <input type="hidden" name="status" value="TODO">
-                        <button class="btn btn-outline-secondary">Back</button>
+                        <button type="submit" class="btn btn-outline-secondary">Back</button>
                     </form>
-                    <form hx-delete="@{'/projects/' + ${project.id}}"
-                          hx-target="closest .project-card" 
-                          hx-swap="outerHTML"
-                          hx-confirm="Delete this project?">
-                        <button class="btn btn-danger">Delete</button>
+                    <form th:action="@{'/projects/' + ${project.id} + '/delete'}" method="post"
+                          onsubmit="return confirm('Delete this project?')">
+                        <button type="submit" class="btn btn-danger">Delete</button>
                     </form>
                 </div>
             </div>
@@ -228,11 +212,9 @@
                         <span>Calculating...</span>
                     </strong>
                 </p>
-                <form hx-delete="@{'/projects/' + ${project.id}}"
-                      hx-target="closest .project-card" 
-                      hx-swap="outerHTML"
-                      hx-confirm="Delete this project?">
-                    <button class="btn btn-sm btn-danger">Delete</button>
+                <form th:action="@{'/projects/' + ${project.id} + '/delete'}" method="post"
+                      onsubmit="return confirm('Delete this project?')">
+                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                 </form>
             </div>
         </div>
