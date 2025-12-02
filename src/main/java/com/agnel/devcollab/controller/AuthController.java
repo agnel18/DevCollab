@@ -30,19 +30,27 @@ public class AuthController {
         if (result.hasErrors()) {
             return "auth/register";
         }
-        if (userRepository.existsByEmail(user.getEmail())) {
-            model.addAttribute("error", "Email already registered!");
-            return "auth/register";
+        
+        // Auto-create user if they don't exist
+        if (!userRepository.existsByEmail(user.getEmail())) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+            userRepository.save(user);
+            return "redirect:/login?registered";
         }
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userRepository.save(user);
-        return "redirect:/login?registered";
+        
+        // User already exists - just redirect to login
+        return "redirect:/login?exists";
     }
 
     @GetMapping("/login")
-    public String showLoginForm(@RequestParam(required = false) String registered, Model model) {
+    public String showLoginForm(@RequestParam(required = false) String registered,
+                                @RequestParam(required = false) String exists,
+                                Model model) {
         if (registered != null) {
             model.addAttribute("success", "Registered! Please login.");
+        }
+        if (exists != null) {
+            model.addAttribute("info", "Email already registered. Please login.");
         }
         return "auth/login";
     }

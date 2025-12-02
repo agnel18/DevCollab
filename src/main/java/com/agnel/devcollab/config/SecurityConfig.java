@@ -21,7 +21,6 @@
                 .authenticationProvider(authProvider)
                 .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/", "/register", "/login", "/h2-console/**", "/css/**", "/js/**").permitAll()
-                    .requestMatchers("/projects", "/projects/**", "/subtasks/**").permitAll()
                     .requestMatchers("/ws/**").permitAll()
                     .anyRequest().authenticated()
                 )

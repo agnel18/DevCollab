@@ -250,18 +250,6 @@
         </div>
     </div>
 
-    <!-- GUEST ALERT -->
-    <div th:if="${isGuest}" class="alert alert-warning d-flex justify-content-between align-items-center mb-4">
-        <div>👤 Guest mode → <a href="/register">Register</a> to save forever</div>
-        <div>
-            <a href="/projects/export" class="btn btn-sm btn-outline-primary">Export</a>
-            <form th:action="@{/projects/import}" method="post" enctype="multipart/form-data" class="d-inline">
-                <input type="file" name="file" accept=".json" required style="display:none" onchange="this.form.submit()" id="importFile">
-                <label for="importFile" class="btn btn-sm btn-outline-secondary">Import</label>
-            </form>
-        </div>
-    </div>
-
     <div class="row g-4" id="board-columns">
         <!-- TO DO -->
         <div class="col-md-4" id="todo-column">
