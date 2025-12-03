@@ -248,6 +248,37 @@
                 <button type="submit" class="btn btn-outline-danger">Logout</button>
             </form>
         </div>
+            <div id="projects-page-hook"></div>
+
+            <form id="project-form" style="margin-bottom: 1rem;">
+                <label>Name <input id="project-name" required></label>
+                <label>Description <input id="project-description"></label>
+                <label>Estimate <input id="project-estimated" type="number" min="1" value="1"></label>
+                <button type="submit">Create Project</button>
+                <span style="margin-left:8px;color:#888;">Timers: Start/Stop per row; inline name editing auto-saves.</span>
+                <script src="/js/app.js"></script>
+            </form>
+
+            <table id="projects-table" border="1" cellspacing="0" cellpadding="6" style="width:100%;">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Status</th>
+                        <th>Own Time</th>
+                        <th>Total Time</th>
+                        <th>Pomodoros</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="projects-tbody">
+                    <tr><td colspan="7">Loading...</td></tr>
+                </tbody>
+                <caption style="caption-side: bottom; text-align: left; color:#888;">Total Time = Project + Tasks + Subtasks</caption>
+                <tfoot>
+                </tfoot>
+                <script src="/js/app.js"></script>
+            </table>
     </div>
 
     <div class="row g-4" id="board-columns">
