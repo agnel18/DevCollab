@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/subtasks")
+@SuppressWarnings("null")
 public class SubtaskRestController {
 
     @Autowired
@@ -26,18 +27,19 @@ public class SubtaskRestController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Subtask> getSubtask(@PathVariable Long id) {
+    public ResponseEntity<Subtask> getSubtask(@PathVariable long id) {
         return subtaskRepository.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/task/{taskId}")
-    public List<Subtask> getSubtasksByTask(@PathVariable Long taskId) {
+    public List<Subtask> getSubtasksByTask(@PathVariable long taskId) {
         return subtaskRepository.findByTaskId(taskId);
     }
 
     @PostMapping
+    @SuppressWarnings("null")
     public ResponseEntity<Subtask> createSubtask(@RequestBody Subtask subtask) {
         if (subtask.getTask() == null || subtask.getTask().getId() == null) {
             return ResponseEntity.badRequest().build();
@@ -52,7 +54,7 @@ public class SubtaskRestController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Subtask> updateSubtask(@PathVariable Long id, @RequestBody Subtask updates) {
+    public ResponseEntity<Subtask> updateSubtask(@PathVariable long id, @RequestBody Subtask updates) {
         return subtaskRepository.findById(id)
                 .map(subtask -> {
                     if (updates.getName() != null) subtask.setName(updates.getName());
@@ -64,7 +66,7 @@ public class SubtaskRestController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteSubtask(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteSubtask(@PathVariable long id) {
         if (subtaskRepository.existsById(id)) {
             subtaskRepository.deleteById(id);
             return ResponseEntity.ok().build();
@@ -73,7 +75,7 @@ public class SubtaskRestController {
     }
 
     @PostMapping("/{id}/pomodoro/start")
-    public ResponseEntity<Subtask> startPomodoro(@PathVariable Long id) {
+    public ResponseEntity<Subtask> startPomodoro(@PathVariable long id) {
         return subtaskRepository.findById(id)
                 .map(subtask -> {
                     subtask.setPomodoroStart(LocalDateTime.now());
@@ -83,7 +85,7 @@ public class SubtaskRestController {
     }
 
     @PostMapping("/{id}/pomodoro/stop")
-    public ResponseEntity<Subtask> stopPomodoro(@PathVariable Long id) {
+    public ResponseEntity<Subtask> stopPomodoro(@PathVariable long id) {
         return subtaskRepository.findById(id)
                 .map(subtask -> {
                     if (subtask.getPomodoroStart() != null) {

@@ -13,6 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/tasks")
+@SuppressWarnings("null")
 public class TaskController {
 
     @Autowired
@@ -30,6 +31,7 @@ public class TaskController {
 
     // Get single task
     @GetMapping("/{id}")
+    @SuppressWarnings("null")
     public ResponseEntity<?> getTask(@PathVariable Long id) {
         return taskRepository.findById(id)
             .map(ResponseEntity::ok)
@@ -38,6 +40,7 @@ public class TaskController {
 
     // Create new task
     @PostMapping
+    @SuppressWarnings("null")
     public ResponseEntity<?> createTask(@RequestBody TaskRequest req) {
         Project project = projectRepository.findById(req.getProjectId())
             .orElseThrow(() -> new RuntimeException("Project not found"));
@@ -59,6 +62,7 @@ public class TaskController {
 
     // Update task (including DONE tasks - always editable)
     @PatchMapping("/{id}")
+    @SuppressWarnings("null")
     public ResponseEntity<?> updateTask(@PathVariable Long id, @RequestBody TaskUpdateRequest req) {
         Task task = taskRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Task not found"));
@@ -74,6 +78,7 @@ public class TaskController {
 
     // Delete task
     @DeleteMapping("/{id}")
+    @SuppressWarnings("null")
     public ResponseEntity<?> deleteTask(@PathVariable Long id) {
         taskRepository.deleteById(id);
         return ResponseEntity.ok().build();
@@ -81,6 +86,7 @@ public class TaskController {
 
     // Start Pomodoro timer on task
     @PostMapping("/{id}/pomodoro/start")
+    @SuppressWarnings("null")
     public ResponseEntity<?> startPomodoro(@PathVariable Long id) {
         Task task = taskRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Task not found"));
@@ -97,6 +103,7 @@ public class TaskController {
 
     // Stop Pomodoro timer on task
     @PostMapping("/{id}/pomodoro/stop")
+    @SuppressWarnings("null")
     public ResponseEntity<?> stopPomodoro(@PathVariable Long id) {
         Task task = taskRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Task not found"));
@@ -122,6 +129,7 @@ public class TaskController {
 
     // Move task status (TODO -> DOING -> DONE, and back)
     @PostMapping("/{id}/move")
+    @SuppressWarnings("null")
     public ResponseEntity<?> moveTask(@PathVariable Long id, @RequestParam Task.Status newStatus) {
         Task task = taskRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Task not found"));

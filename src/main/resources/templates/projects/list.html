@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-
 <head>
     <meta charset="UTF-8">
     <title th:text="${pageTitle}">My Projects</title>
@@ -235,11 +234,14 @@
             padding: 4px 10px;
             border-radius: 12px;
         }
+        /* Compact controls */
+        .control-bar { display:flex; gap:8px; align-items:center; }
+        .btn-compact { padding: 4px 8px; font-size: 12px; line-height: 1.2; }
+        .timer-controls { display:flex; gap:6px; flex-wrap:nowrap; }
     </style>
-</head>
-<body>
 
-<div th:fragment="content" id="main-content" hx-ext="ws" ws-connect="/ws">
+<body>
+<div id="main-content" hx-ext="ws" ws-connect="/ws">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 th:text="${pageTitle}" style="font-weight: 700; color: #212529;">My Projects</h1>
         <div>
@@ -250,35 +252,10 @@
         </div>
             <div id="projects-page-hook"></div>
 
-            <form id="project-form" style="margin-bottom: 1rem;">
-                <label>Name <input id="project-name" required></label>
-                <label>Description <input id="project-description"></label>
-                <label>Estimate <input id="project-estimated" type="number" min="1" value="1"></label>
-                <button type="submit">Create Project</button>
-                <span style="margin-left:8px;color:#888;">Timers: Start/Stop per row; inline name editing auto-saves.</span>
-                <script src="/js/app.js"></script>
-            </form>
-
-            <table id="projects-table" border="1" cellspacing="0" cellpadding="6" style="width:100%;">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Status</th>
-                        <th>Own Time</th>
-                        <th>Total Time</th>
-                        <th>Pomodoros</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="projects-tbody">
-                    <tr><td colspan="7">Loading...</td></tr>
-                </tbody>
-                <caption style="caption-side: bottom; text-align: left; color:#888;">Total Time = Project + Tasks + Subtasks</caption>
-                <tfoot>
-                </tfoot>
-                <script src="/js/app.js"></script>
-            </table>
+            <div class="control-bar mb-2">
+                <a href="/projects/new" class="btn btn-success btn-compact">+ New Project</a>
+                <span style="margin-left:8px;color:#888;">Track work with compact timers.</span>
+            </div>
     </div>
 
     <div class="row g-4" id="board-columns">
@@ -348,11 +325,7 @@
 <!-- Toast Container -->
 <div id="toastContainer" class="toast-container"></div>
 
-<th:block th:replace="~{layout :: layout(pageTitle = ${pageTitle}, content = ~{::content})}" />
-
 <script th:inline="javascript">
-    // ========== GLOBAL VARIABLES ==========
-    let stompClient = null;
     let userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     let userName = null;
     let userColor = null;

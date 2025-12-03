@@ -13,8 +13,6 @@ import com.agnel.devcollab.repository.SubtaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -25,6 +23,7 @@ import java.util.Set;
 
 @RestController
 @RequestMapping("/api/time-entries")
+@SuppressWarnings("null")
 public class TimeEntryController {
     @Autowired
     private TimeEntryRepository timeEntryRepository;
@@ -54,6 +53,7 @@ public class TimeEntryController {
 
     // Create a new time entry
     @PostMapping
+    @SuppressWarnings("null")
     public ResponseEntity<?> create(@RequestBody TimeEntryRequest req) {
         TimeEntry entry = new TimeEntry();
         
@@ -88,7 +88,8 @@ public class TimeEntryController {
 
     // Update an existing time entry (resize, move, edit details)
     @PatchMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody TimeEntryUpdateRequest req) {
+    @SuppressWarnings("null")
+    public ResponseEntity<?> update(@PathVariable long id, @RequestBody TimeEntryUpdateRequest req) {
         TimeEntry entry = timeEntryRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("TimeEntry not found"));
         
@@ -115,7 +116,7 @@ public class TimeEntryController {
 
     // Delete a time entry
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
+    public ResponseEntity<?> delete(@PathVariable long id) {
         timeEntryRepository.deleteById(id);
         return ResponseEntity.ok().build();
     }

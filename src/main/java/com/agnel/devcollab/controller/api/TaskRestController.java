@@ -12,6 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/tasks")
+@SuppressWarnings("null")
 public class TaskRestController {
 
     @Autowired
@@ -26,18 +27,19 @@ public class TaskRestController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Task> getTask(@PathVariable Long id) {
+    public ResponseEntity<Task> getTask(@PathVariable long id) {
         return taskRepository.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/project/{projectId}")
-    public List<Task> getTasksByProject(@PathVariable Long projectId) {
+    public List<Task> getTasksByProject(@PathVariable long projectId) {
         return taskRepository.findByProjectId(projectId);
     }
 
     @PostMapping
+    @SuppressWarnings("null")
     public ResponseEntity<Task> createTask(@RequestBody Task task) {
         if (task.getProject() == null || task.getProject().getId() == null) {
             return ResponseEntity.badRequest().build();
@@ -53,7 +55,7 @@ public class TaskRestController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Task> updateTask(@PathVariable Long id, @RequestBody Task updates) {
+    public ResponseEntity<Task> updateTask(@PathVariable long id, @RequestBody Task updates) {
         return taskRepository.findById(id)
                 .map(task -> {
                     if (updates.getName() != null) task.setName(updates.getName());
@@ -71,7 +73,7 @@ public class TaskRestController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteTask(@PathVariable long id) {
         if (taskRepository.existsById(id)) {
             taskRepository.deleteById(id);
             return ResponseEntity.ok().build();
@@ -80,7 +82,7 @@ public class TaskRestController {
     }
 
     @PostMapping("/{id}/pomodoro/start")
-    public ResponseEntity<Task> startPomodoro(@PathVariable Long id) {
+    public ResponseEntity<Task> startPomodoro(@PathVariable long id) {
         return taskRepository.findById(id)
                 .map(task -> {
                     task.setPomodoroStart(LocalDateTime.now());
@@ -91,7 +93,7 @@ public class TaskRestController {
     }
 
     @PostMapping("/{id}/pomodoro/stop")
-    public ResponseEntity<Task> stopPomodoro(@PathVariable Long id) {
+    public ResponseEntity<Task> stopPomodoro(@PathVariable long id) {
         return taskRepository.findById(id)
                 .map(task -> {
                     if (task.getPomodoroStart() != null) {

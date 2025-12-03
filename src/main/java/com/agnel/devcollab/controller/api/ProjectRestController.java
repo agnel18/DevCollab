@@ -11,6 +11,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/projects")
+@SuppressWarnings("null")
 public class ProjectRestController {
 
     @Autowired
@@ -22,7 +23,7 @@ public class ProjectRestController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Project> getProject(@PathVariable Long id) {
+    public ResponseEntity<Project> getProject(@PathVariable long id) {
         return projectRepository.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -35,7 +36,8 @@ public class ProjectRestController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Project> updateProject(@PathVariable Long id, @RequestBody Project updates) {
+    @SuppressWarnings("null")
+    public ResponseEntity<Project> updateProject(@PathVariable long id, @RequestBody Project updates) {
         return projectRepository.findById(id)
                 .map(project -> {
                     if (updates.getName() != null) project.setName(updates.getName());
@@ -53,7 +55,7 @@ public class ProjectRestController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProject(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteProject(@PathVariable long id) {
         if (projectRepository.existsById(id)) {
             projectRepository.deleteById(id);
             return ResponseEntity.ok().build();
@@ -62,7 +64,7 @@ public class ProjectRestController {
     }
 
     @PostMapping("/{id}/pomodoro/start")
-    public ResponseEntity<Project> startPomodoro(@PathVariable Long id) {
+    public ResponseEntity<Project> startPomodoro(@PathVariable long id) {
         return projectRepository.findById(id)
                 .map(project -> {
                     project.setPomodoroStart(LocalDateTime.now());
@@ -73,7 +75,7 @@ public class ProjectRestController {
     }
 
     @PostMapping("/{id}/pomodoro/stop")
-    public ResponseEntity<Project> stopPomodoro(@PathVariable Long id) {
+    public ResponseEntity<Project> stopPomodoro(@PathVariable long id) {
         return projectRepository.findById(id)
                 .map(project -> {
                     if (project.getPomodoroStart() != null) {

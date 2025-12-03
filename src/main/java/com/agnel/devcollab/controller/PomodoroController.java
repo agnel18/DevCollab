@@ -3,7 +3,6 @@ package com.agnel.devcollab.controller;
 import com.agnel.devcollab.entity.PomodoroLog;
 import com.agnel.devcollab.entity.Subtask;
 import com.agnel.devcollab.entity.User;
-import com.agnel.devcollab.repository.ProjectRepository;
 import com.agnel.devcollab.repository.UserRepository;
 import com.agnel.devcollab.service.PomodoroService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,13 +26,11 @@ import java.util.Map;
  */
 @Controller
 @RequestMapping("/pomodoro")
+@SuppressWarnings("null")
 public class PomodoroController {
 
     @Autowired
     private PomodoroService pomodoroService;
-    
-    @Autowired
-    private ProjectRepository projectRepository;
     
     @Autowired
     private UserRepository userRepository;
@@ -48,6 +45,7 @@ public class PomodoroController {
      */
     @PostMapping("/subtasks/{subtaskId}/start")
     @ResponseBody
+    @SuppressWarnings("null")
     public ResponseEntity<?> startPomodoro(
             @PathVariable Long subtaskId,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -115,6 +113,7 @@ public class PomodoroController {
      */
     @PostMapping("/subtasks/{subtaskId}/estimate")
     @ResponseBody
+    @SuppressWarnings("null")
     public ResponseEntity<?> updateEstimate(
             @PathVariable Long subtaskId,
             @RequestParam int estimate) {

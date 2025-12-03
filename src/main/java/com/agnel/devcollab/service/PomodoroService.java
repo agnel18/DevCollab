@@ -5,8 +5,6 @@ import com.agnel.devcollab.entity.PomodoroLog.BreakType;
 import com.agnel.devcollab.entity.Subtask;
 import com.agnel.devcollab.entity.User;
 import com.agnel.devcollab.repository.PomodoroLogRepository;
-import com.agnel.devcollab.repository.ProjectRepository;
-import com.agnel.devcollab.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -29,12 +27,6 @@ public class PomodoroService {
 
     @Autowired
     private PomodoroLogRepository pomodoroLogRepository;
-    
-    @Autowired
-    private ProjectRepository projectRepository;
-    
-    @Autowired
-    private UserRepository userRepository;
     
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
@@ -108,7 +100,7 @@ public class PomodoroService {
      * Complete a Pomodoro cycle (25 minutes work)
      */
     @Transactional
-    public Map<String, Object> completeCycle(Long logId, int distractions, String notes) {
+    public Map<String, Object> completeCycle(long logId, int distractions, String notes) {
         PomodoroLog log = pomodoroLogRepository.findById(logId)
             .orElseThrow(() -> new IllegalArgumentException("PomodoroLog not found"));
         
@@ -148,7 +140,7 @@ public class PomodoroService {
      * Pause a Pomodoro with reason tracking
      */
     @Transactional
-    public void pauseWithReason(Long logId, String reason) {
+    public void pauseWithReason(long logId, String reason) {
         PomodoroLog log = pomodoroLogRepository.findById(logId)
             .orElseThrow(() -> new IllegalArgumentException("PomodoroLog not found"));
         

@@ -1,7 +1,6 @@
 package com.agnel.devcollab.controller;
 
 import com.agnel.devcollab.entity.Project.Status;
-import org.springframework.security.access.prepost.PreAuthorize;
 import com.agnel.devcollab.entity.Project;
 import com.agnel.devcollab.entity.User;
 import com.agnel.devcollab.entity.Task;
@@ -105,14 +104,14 @@ public class ProjectController {
     }
 
     @GetMapping("/projects/{projectId}/subtasks/new")
-    public String newSubtaskForm(@PathVariable Long projectId, Model model) {
+    public String newSubtaskForm(@PathVariable long projectId, Model model) {
         model.addAttribute("subtask", new Subtask());
         model.addAttribute("projectId", projectId);
         return "projects/subtask-form";
     }
 
     @PostMapping("/projects/{id}/delete")
-    public String deleteProject(@PathVariable Long id,
+    public String deleteProject(@PathVariable long id,
                                 HttpSession session,
                                 RedirectAttributes redirectAttributes) {
         Project project = projectRepository.findById(id).orElse(null);
@@ -140,7 +139,7 @@ public class ProjectController {
     }
 
     @PostMapping("/projects/{id}/status")
-    public String updateStatus(@PathVariable Long id,
+    public String updateStatus(@PathVariable long id,
                             @RequestParam Status status,
                             HttpSession session,
                             RedirectAttributes redirectAttributes) {
@@ -168,7 +167,7 @@ public class ProjectController {
 
     @PostMapping("/projects/{id}/status/ajax")
     @ResponseBody
-    public ResponseEntity<String> updateStatusAjax(@PathVariable Long id,
+    public ResponseEntity<String> updateStatusAjax(@PathVariable long id,
                                                    @RequestParam Status status,
                                                    HttpSession session,
                                                    @RequestHeader(value = "X-User-Name", required = false) String userName,
@@ -205,19 +204,19 @@ public class ProjectController {
     }
     
     @PostMapping("/projects/{id}/pomodoro/start")
-    public String startProjectPomodoro(@PathVariable Long id, Authentication auth, HttpSession session) {
+    public String startProjectPomodoro(@PathVariable long id, Authentication auth, HttpSession session) {
         updateProjectPomodoro(id, auth, session, true);
         return "redirect:/projects";
     }
 
     @PostMapping("/projects/{id}/pomodoro/stop")
-    public String stopProjectPomodoro(@PathVariable Long id, Authentication auth, HttpSession session) {
+    public String stopProjectPomodoro(@PathVariable long id, Authentication auth, HttpSession session) {
         updateProjectPomodoro(id, auth, session, false);
         return "redirect:/projects";
     }
 
     @PostMapping("/projects/{id}/pomodoro/duration")
-    public String setPomodoroDuration(@PathVariable Long id, 
+    public String setPomodoroDuration(@PathVariable long id, 
                                       @RequestParam int duration) {
         Project project = projectRepository.findById(id).orElse(null);
         if (project != null) {
@@ -231,8 +230,8 @@ public class ProjectController {
     }
 
     @PostMapping("/projects/{projectId}/subtasks")
-    public String createSubtask(@PathVariable Long projectId,
-                                @PathVariable Long taskId,
+    public String createSubtask(@PathVariable long projectId,
+                                @PathVariable long taskId,
                                 @ModelAttribute Subtask subtask) {
         // This endpoint needs refactoring for Task hierarchy
         // For now, return error as it's incompatible with new structure
@@ -240,18 +239,18 @@ public class ProjectController {
     }
 
     @PostMapping("/subtasks/{id}/pomodoro/start")
-    public String startSubtaskPomodoro(@PathVariable Long id, Authentication auth, HttpSession session) {
+    public String startSubtaskPomodoro(@PathVariable long id, Authentication auth, HttpSession session) {
         updateSubtaskPomodoro(id, auth, session, true);
         return "redirect:/projects";
     }
 
     @PostMapping("/subtasks/{id}/pomodoro/stop")
-    public String stopSubtaskPomodoro(@PathVariable Long id, Authentication auth, HttpSession session) {
+    public String stopSubtaskPomodoro(@PathVariable long id, Authentication auth, HttpSession session) {
         updateSubtaskPomodoro(id, auth, session, false);
         return "redirect:/projects";
     }
 
-    private void updateProjectPomodoro(Long id, Authentication auth, HttpSession session, boolean start) {
+    private void updateProjectPomodoro(long id, Authentication auth, HttpSession session, boolean start) {
         Project project = projectRepository.findById(id).orElse(null);
         if (project == null) return;
 
@@ -304,7 +303,7 @@ public class ProjectController {
         messagingTemplate.convertAndSend("/topic/project-updates", update);
     }
 
-    private void updateSubtaskPomodoro(Long id, Authentication auth, HttpSession session, boolean start) {
+    private void updateSubtaskPomodoro(long id, Authentication auth, HttpSession session, boolean start) {
         Subtask subtask = subtaskRepository.findById(id).orElse(null);
         if (subtask == null) return;
         

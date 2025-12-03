@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
 @Controller
+@SuppressWarnings("null")
 public class WebSocketController {
 
     private final SimpMessagingTemplate messagingTemplate;
@@ -40,7 +41,7 @@ public class WebSocketController {
                 for (String mentionedUser : mentionedUsers) {
                     ChatMessage notification = new ChatMessage();
                     notification.setProjectId(chatMessage.getProjectId());
-                    notification.setMessage("You were mentioned by " + chatMessage.getUserName() + ": " + message);
+                    notification.setMessage("You were mentioned (" + mentionedUser + ") by " + chatMessage.getUserName() + ": " + message);
                     notification.setUserName("System");
                     notification.setUserColor("#FF6B6B");
                     notification.setTimestamp(LocalDateTime.now());

@@ -12,14 +12,13 @@ import com.agnel.devcollab.repository.TaskRepository;
 import com.agnel.devcollab.repository.SubtaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/timer")
+@SuppressWarnings("null")
 public class TimerController {
     @Autowired
     private TimeEntryRepository timeEntryRepository;
@@ -37,6 +36,7 @@ public class TimerController {
     private SubtaskRepository subtaskRepository;
 
     @PostMapping("/start")
+    @SuppressWarnings("null")
     public ResponseEntity<?> start(@RequestBody TimerStartRequest req) {
         TimeEntry entry = new TimeEntry();
         
@@ -69,7 +69,11 @@ public class TimerController {
     }
 
     @PostMapping("/stop")
+    @SuppressWarnings("null")
     public ResponseEntity<?> stop(@RequestBody TimerStopRequest req) {
+        if (req.getEntryId() == null) {
+            throw new RuntimeException("Entry ID is required");
+        }
         TimeEntry entry = timeEntryRepository.findById(req.getEntryId())
             .orElseThrow(() -> new RuntimeException("TimeEntry not found"));
         entry.setEnd(LocalDateTime.now());
@@ -78,10 +82,7 @@ public class TimerController {
     }
 
     @GetMapping("/active")
-    public ResponseEntity<?> getActive(@RequestParam(required = false) Long userId) {
-        if (userId == null) {
-            userId = 1L; // Default for testing
-        }
+    public ResponseEntity<?> getActive(@RequestParam(required = false, defaultValue = "1") long userId) {
         List<TimeEntry> active = timeEntryRepository.findByUserId(userId)
             .stream().filter(e -> e.getEnd() == null).toList();
         return ResponseEntity.ok(active);
