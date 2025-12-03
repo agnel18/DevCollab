@@ -1,5 +1,6 @@
 package com.agnel.devcollab.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -17,9 +18,11 @@ public class Task {
 
     @ManyToOne
     @JoinColumn(name = "project_id")
+    @JsonIgnoreProperties({"tasks", "owner"})
     private Project project;
 
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties("task")
     private List<Subtask> subtasks = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)

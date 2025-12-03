@@ -84,7 +84,7 @@ public class TaskRestController {
         return taskRepository.findById(id)
                 .map(task -> {
                     task.setPomodoroStart(LocalDateTime.now());
-                    task.setIsBreak(false);
+                    task.setBreak(false);
                     return ResponseEntity.ok(taskRepository.save(task));
                 })
                 .orElse(ResponseEntity.notFound().build());

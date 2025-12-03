@@ -1,5 +1,5 @@
-# Simple comprehensive test for 3-level hierarchy
-$baseUrl = "http://localhost:8080"
+# Comprehensive test for 3-level hierarchy (Project > Task > Subtask)
+$baseUrl = "http://localhost:8080/api"
 $passCount = 0
 $failCount = 0
 
@@ -9,7 +9,13 @@ Write-Host "Testing: Project > Task > Subtask`n" -ForegroundColor Yellow
 # Test 1: Create Project
 Write-Host "[1] Creating Project..." -ForegroundColor Cyan
 try {
-    $project = Invoke-RestMethod -Uri "$baseUrl/api/projects" -Method POST -Body '{"name":"Test Project","description":"Testing hierarchy","estimatedPomodoros":10}' -ContentType "application/json"
+    $projectBody = @{
+        name = "Test Project"
+        description = "Testing hierarchy"
+        estimatedPomodoros = 10
+    } | ConvertTo-Json
+    
+    $project = Invoke-RestMethod -Uri "$baseUrl/projects" -Method POST -Body $projectBody -ContentType "application/json"
     Write-Host "    PASS: Project created (ID: $($project.id))" -ForegroundColor Green
     $passCount++
 } catch {
@@ -21,7 +27,14 @@ try {
 # Test 2: Create Task under Project
 Write-Host "`n[2] Creating Task under Project..." -ForegroundColor Cyan
 try {
-    $task = Invoke-RestMethod -Uri "`$baseUrl/api/tasks" -Method POST -Body "{`"projectId`":$($project.id),`"name`":`"Test Task`",`"description`":`"Task desc`",`"estimatedPomodoros`":5}" -ContentType "application/json"
+    $taskBody = @{
+        project = @{ id = $project.id }
+        name = "Test Task"
+        description = "Task description"
+        estimatedPomodoros = 5
+    } | ConvertTo-Json
+    
+    $task = Invoke-RestMethod -Uri "$baseUrl/tasks" -Method POST -Body $taskBody -ContentType "application/json"
     Write-Host "    PASS: Task created (ID: $($task.id))" -ForegroundColor Green
     $passCount++
 } catch {
@@ -32,7 +45,13 @@ try {
 # Test 3: Create Subtask under Task
 Write-Host "`n[3] Creating Subtask under Task..." -ForegroundColor Cyan
 try {
-    $subtask = Invoke-RestMethod -Uri "`$baseUrl/api/subtasks" -Method POST -Body "{`"taskId`":$($task.id),`"name`":`"Test Subtask`",`"estimatedPomodoros`":3}" -ContentType "application/json"
+    $subtaskBody = @{
+        task = @{ id = $task.id }
+        name = "Test Subtask"
+        estimatedPomodoros = 3
+    } | ConvertTo-Json
+    
+    $subtask = Invoke-RestMethod -Uri "$baseUrl/subtasks" -Method POST -Body $subtaskBody -ContentType "application/json"
     Write-Host "    PASS: Subtask created (ID: $($subtask.id))" -ForegroundColor Green
     $passCount++
 } catch {
@@ -80,7 +99,7 @@ try {
     Start-Sleep -Seconds 3
     $pomStop = Invoke-RestMethod -Uri "$baseUrl/subtasks/$($subtask.id)/pomodoro/stop" -Method POST
     if ($pomStop.totalSecondsSpent -ge 3) {
-        Write-Host "    PASS: Pomodoro tracked time (${pomStop.totalSecondsSpent}s)" -ForegroundColor Green
+        Write-Host "    PASS: Subtask Pomodoro tracked time ($($pomStop.totalSecondsSpent)s)" -ForegroundColor Green
         $passCount++
     } else {
         Write-Host "    FAIL: Time not tracked correctly" -ForegroundColor Red
@@ -99,7 +118,7 @@ try {
     Start-Sleep -Seconds 3
     $pomStop = Invoke-RestMethod -Uri "$baseUrl/tasks/$($task.id)/pomodoro/stop" -Method POST
     if ($pomStop.totalSecondsSpent -ge 3) {
-        Write-Host "    PASS: Pomodoro tracked time (${pomStop.totalSecondsSpent}s)" -ForegroundColor Green
+        Write-Host "    PASS: Task Pomodoro tracked time ($($pomStop.totalSecondsSpent)s)" -ForegroundColor Green
         $passCount++
     } else {
         Write-Host "    FAIL: Time not tracked correctly" -ForegroundColor Red
@@ -118,7 +137,7 @@ try {
     Start-Sleep -Seconds 3
     $pomStop = Invoke-RestMethod -Uri "$baseUrl/projects/$($project.id)/pomodoro/stop" -Method POST
     if ($pomStop.totalSecondsSpent -ge 3) {
-        Write-Host "    PASS: Pomodoro tracked time (${pomStop.totalSecondsSpent}s)" -ForegroundColor Green
+        Write-Host "    PASS: Project Pomodoro tracked time ($($pomStop.totalSecondsSpent)s)" -ForegroundColor Green
         $passCount++
     } else {
         Write-Host "    FAIL: Time not tracked correctly" -ForegroundColor Red
@@ -129,15 +148,16 @@ try {
     $failCount++
 }
 
-# Test 9: Verify time aggregation at Task level
+# Test 9: Verify Task time aggregation (includes Subtask time)
 Write-Host "`n[9] Verifying Task time aggregation (includes Subtask time)..." -ForegroundColor Cyan
 try {
     $taskWithTime = Invoke-RestMethod -Uri "$baseUrl/tasks/$($task.id)" -Method GET
-    if ($taskWithTime.combinedSecondsSpent -gt 0) {
-        Write-Host "    PASS: Task shows combined time: $($taskWithTime.combinedSecondsSpent)s" -ForegroundColor Green
+    $expectedMin = 6 # Task: 3s + Subtask: 3s
+    if ($taskWithTime.combinedSecondsSpent -ge $expectedMin) {
+        Write-Host "    PASS: Task aggregates time ($($taskWithTime.combinedSecondsSpent)s >= ${expectedMin}s)" -ForegroundColor Green
         $passCount++
     } else {
-        Write-Host "    FAIL: Task combined time is 0" -ForegroundColor Red
+        Write-Host "    FAIL: Task time aggregation incorrect ($($taskWithTime.combinedSecondsSpent)s)" -ForegroundColor Red
         $failCount++
     }
 } catch {
@@ -145,15 +165,16 @@ try {
     $failCount++
 }
 
-# Test 10: Verify time aggregation at Project level
+# Test 10: Verify Project time aggregation (includes Task + Subtask time)
 Write-Host "`n[10] Verifying Project time aggregation (includes Task + Subtask time)..." -ForegroundColor Cyan
 try {
     $projectWithTime = Invoke-RestMethod -Uri "$baseUrl/projects/$($project.id)" -Method GET
-    if ($projectWithTime.combinedSecondsSpent -gt 0) {
-        Write-Host "    PASS: Project shows combined time: $($projectWithTime.combinedSecondsSpent)s" -ForegroundColor Green
+    $expectedMin = 9 # Project: 3s + Task: 3s + Subtask: 3s
+    if ($projectWithTime.combinedSecondsSpent -ge $expectedMin) {
+        Write-Host "    PASS: Project aggregates all time ($($projectWithTime.combinedSecondsSpent)s >= ${expectedMin}s)" -ForegroundColor Green
         $passCount++
     } else {
-        Write-Host "    FAIL: Project combined time is 0" -ForegroundColor Red
+        Write-Host "    FAIL: Project time aggregation incorrect ($($projectWithTime.combinedSecondsSpent)s)" -ForegroundColor Red
         $failCount++
     }
 } catch {
@@ -161,31 +182,18 @@ try {
     $failCount++
 }
 
-# Test 11: Update status to DONE at all levels
+# Test 11: Set all items to DONE status
 Write-Host "`n[11] Setting all items to DONE status..." -ForegroundColor Cyan
 try {
-    Invoke-RestMethod -Uri "$baseUrl/subtasks/$($subtask.id)" -Method PATCH -Body '{"completed":true}' -ContentType "application/json" | Out-Null
-    Invoke-RestMethod -Uri "$baseUrl/tasks/$($task.id)" -Method PATCH -Body '{"status":"DONE"}' -ContentType "application/json" | Out-Null
-    Invoke-RestMethod -Uri "$baseUrl/projects/$($project.id)" -Method PATCH -Body '{"status":"DONE"}' -ContentType "application/json" | Out-Null
-    Write-Host "    PASS: All items marked DONE" -ForegroundColor Green
-    $passCount++
-} catch {
-    Write-Host "    FAIL: $($_.Exception.Message)" -ForegroundColor Red
-    $failCount++
-}
-
-# Test 12: Edit DONE items (verify isEditable = true)
-Write-Host "`n[12] Testing if DONE items are editable..." -ForegroundColor Cyan
-try {
-    $editedProj = Invoke-RestMethod -Uri "$baseUrl/projects/$($project.id)" -Method PATCH -Body '{"name":"Edited DONE Project"}' -ContentType "application/json"
-    $editedTask = Invoke-RestMethod -Uri "$baseUrl/tasks/$($task.id)" -Method PATCH -Body '{"name":"Edited DONE Task"}' -ContentType "application/json"
-    $editedSubtask = Invoke-RestMethod -Uri "$baseUrl/subtasks/$($subtask.id)" -Method PATCH -Body '{"name":"Edited DONE Subtask"}' -ContentType "application/json"
+    $subtaskDone = Invoke-RestMethod -Uri "$baseUrl/subtasks/$($subtask.id)" -Method PATCH -Body '{"completed":true}' -ContentType "application/json"
+    $taskDone = Invoke-RestMethod -Uri "$baseUrl/tasks/$($task.id)" -Method PATCH -Body '{"status":"DONE"}' -ContentType "application/json"
+    $projectDone = Invoke-RestMethod -Uri "$baseUrl/projects/$($project.id)" -Method PATCH -Body '{"status":"DONE"}' -ContentType "application/json"
     
-    if ($editedProj.isEditable -and $editedTask.isEditable -and $editedSubtask.isEditable) {
-        Write-Host "    PASS: All DONE items editable (isEditable=true)" -ForegroundColor Green
+    if ($subtaskDone.completed -and $taskDone.status -eq "DONE" -and $projectDone.status -eq "DONE") {
+        Write-Host "    PASS: All items marked as DONE" -ForegroundColor Green
         $passCount++
     } else {
-        Write-Host "    FAIL: Some items not editable" -ForegroundColor Red
+        Write-Host "    FAIL: Items not properly marked as DONE" -ForegroundColor Red
         $failCount++
     }
 } catch {
@@ -193,64 +201,88 @@ try {
     $failCount++
 }
 
-# Test 13: Test orphan Task (should fail)
+# Test 12: Test if DONE items are editable
+Write-Host "`n[12] Testing if DONE items are editable..." -ForegroundColor Cyan
+try {
+    $subtaskEdit = Invoke-RestMethod -Uri "$baseUrl/subtasks/$($subtask.id)" -Method PATCH -Body '{"name":"Edited Subtask"}' -ContentType "application/json"
+    $taskEdit = Invoke-RestMethod -Uri "$baseUrl/tasks/$($task.id)" -Method PATCH -Body '{"name":"Edited Task"}' -ContentType "application/json"
+    $projectEdit = Invoke-RestMethod -Uri "$baseUrl/projects/$($project.id)" -Method PATCH -Body '{"name":"Edited Project"}' -ContentType "application/json"
+    
+    if ($subtaskEdit.name -eq "Edited Subtask" -and $taskEdit.name -eq "Edited Task" -and $projectEdit.name -eq "Edited Project") {
+        Write-Host "    PASS: DONE items are editable" -ForegroundColor Green
+        $passCount++
+    } else {
+        Write-Host "    FAIL: DONE items not editable" -ForegroundColor Red
+        $failCount++
+    }
+} catch {
+    Write-Host "    FAIL: $($_.Exception.Message)" -ForegroundColor Red
+    $failCount++
+}
+
+# Test 13: Create orphan Task (no projectId) - should fail
 Write-Host "`n[13] Creating orphan Task (no projectId) - should fail..." -ForegroundColor Cyan
 try {
-    Invoke-RestMethod -Uri "`$baseUrl/api/tasks" -Method POST -Body '{"name":"Orphan Task"}' -ContentType "application/json" -ErrorAction Stop
-    Write-Host "    FAIL: Should have rejected orphan Task" -ForegroundColor Red
+    $orphanTask = Invoke-RestMethod -Uri "$baseUrl/tasks" -Method POST -Body '{"name":"Orphan Task"}' -ContentType "application/json"
+    Write-Host "    FAIL: Orphan Task was created (should have been rejected)" -ForegroundColor Red
     $failCount++
 } catch {
     Write-Host "    PASS: Correctly rejected orphan Task" -ForegroundColor Green
     $passCount++
 }
 
-# Test 14: Test orphan Subtask (should fail)
+# Test 14: Create orphan Subtask (no taskId) - should fail
 Write-Host "`n[14] Creating orphan Subtask (no taskId) - should fail..." -ForegroundColor Cyan
 try {
-    Invoke-RestMethod -Uri "`$baseUrl/api/subtasks" -Method POST -Body '{"name":"Orphan Subtask","estimatedPomodoros":1}' -ContentType "application/json" -ErrorAction Stop
-    Write-Host "    FAIL: Should have rejected orphan Subtask" -ForegroundColor Red
+    $orphanSubtask = Invoke-RestMethod -Uri "$baseUrl/subtasks" -Method POST -Body '{"name":"Orphan Subtask"}' -ContentType "application/json"
+    Write-Host "    FAIL: Orphan Subtask was created (should have been rejected)" -ForegroundColor Red
     $failCount++
 } catch {
     Write-Host "    PASS: Correctly rejected orphan Subtask" -ForegroundColor Green
     $passCount++
 }
 
-# Test 15: Cascade delete - Delete Task should delete Subtasks
+# Test 15: Test cascade delete (Task deletion removes Subtasks)
 Write-Host "`n[15] Testing cascade delete (Task deletion removes Subtasks)..." -ForegroundColor Cyan
 try {
-    # Create new task and subtask for cascade test
-    $cascadeTask = Invoke-RestMethod -Uri "`$baseUrl/api/tasks" -Method POST -Body "{`"projectId`":$($project.id),`"name`":`"Cascade Task`",`"estimatedPomodoros`":3}" -ContentType "application/json"
-    $cascadeSubtask = Invoke-RestMethod -Uri "`$baseUrl/api/subtasks" -Method POST -Body "{`"taskId`":$($cascadeTask.id),`"name`":`"Cascade Subtask`",`"estimatedPomodoros`":1}" -ContentType "application/json"
+    # First verify subtask exists
+    $subtaskExists = Invoke-RestMethod -Uri "$baseUrl/subtasks/$($subtask.id)" -Method GET
     
-    # Delete task
-    Invoke-RestMethod -Uri "$baseUrl/tasks/$($cascadeTask.id)" -Method DELETE
+    # Delete the task (should cascade to subtask)
+    Invoke-RestMethod -Uri "$baseUrl/tasks/$($task.id)" -Method DELETE
     
-    # Try to get subtask (should fail)
+    # Try to get the subtask - should fail with 404
     try {
-        Invoke-RestMethod -Uri "$baseUrl/subtasks/$($cascadeSubtask.id)" -Method GET -ErrorAction Stop
+        $subtaskCheck = Invoke-RestMethod -Uri "$baseUrl/subtasks/$($subtask.id)" -Method GET
         Write-Host "    FAIL: Subtask still exists after Task deletion" -ForegroundColor Red
         $failCount++
     } catch {
-        Write-Host "    PASS: Subtask correctly deleted with Task (cascade)" -ForegroundColor Green
-        $passCount++
+        if ($_.Exception.Response.StatusCode -eq 404) {
+            Write-Host "    PASS: Cascade delete worked (Subtask removed with Task)" -ForegroundColor Green
+            $passCount++
+        } else {
+            Write-Host "    FAIL: Unexpected error: $($_.Exception.Message)" -ForegroundColor Red
+            $failCount++
+        }
     }
 } catch {
     Write-Host "    FAIL: $($_.Exception.Message)" -ForegroundColor Red
     $failCount++
 }
 
-# Final report
-Write-Host "`n========================================" -ForegroundColor Yellow
+# Final summary
+Write-Host "`n========================================"  -ForegroundColor Yellow
 Write-Host "FINAL TEST RESULTS" -ForegroundColor Yellow
 Write-Host "========================================" -ForegroundColor Yellow
 Write-Host "Total Tests: $($passCount + $failCount)" -ForegroundColor White
 Write-Host "Passed: $passCount" -ForegroundColor Green
 Write-Host "Failed: $failCount" -ForegroundColor Red
-$passRate = [math]::Round(($passCount / ($passCount + $failCount)) * 100, 2)
-Write-Host "Pass Rate: $passRate%" -ForegroundColor $(if ($passRate -eq 100) { "Green" } else { "Yellow" })
+$passRate = [math]::Round(($passCount / ($passCount + $failCount)) * 100, 0)
+Write-Host "Pass Rate: $passRate%" -ForegroundColor $(if ($passRate -ge 80) { "Green" } elseif ($passRate -ge 60) { "Yellow" } else { "Red" })
+Write-Host ""
 
 if ($failCount -eq 0) {
-    Write-Host "`nALL TESTS PASSED! 3-level hierarchy working correctly." -ForegroundColor Green
+    Write-Host "All tests passed!" -ForegroundColor Green
 } else {
-    Write-Host "`nSome tests failed. Review errors above." -ForegroundColor Red
+    Write-Host "Some tests failed. Review errors above." -ForegroundColor Red
 }

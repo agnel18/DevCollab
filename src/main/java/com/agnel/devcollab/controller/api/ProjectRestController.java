@@ -66,7 +66,7 @@ public class ProjectRestController {
         return projectRepository.findById(id)
                 .map(project -> {
                     project.setPomodoroStart(LocalDateTime.now());
-                    project.setIsBreak(false);
+                    project.setBreak(false);
                     return ResponseEntity.ok(projectRepository.save(project));
                 })
                 .orElse(ResponseEntity.notFound().build());

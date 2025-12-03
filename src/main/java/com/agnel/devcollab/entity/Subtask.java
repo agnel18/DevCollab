@@ -1,5 +1,6 @@
 package com.agnel.devcollab.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -14,6 +15,7 @@ public class Subtask {
 
     @ManyToOne
     @JoinColumn(name = "task_id")
+    @JsonIgnoreProperties({"subtasks", "project"})
     private Task task;
 
     private LocalDateTime pomodoroStart;
