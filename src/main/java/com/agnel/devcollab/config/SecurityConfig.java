@@ -17,12 +17,27 @@
         @Bean
         public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
             http
+                .csrf(csrf -> csrf.disable())
+                .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                 .authorizeHttpRequests(auth -> auth
-                    .anyRequest().permitAll()  // Disable security for testing
+                    .requestMatchers(
+                        "/api/health",
+                        "/api/**",
+                        "/login",
+                        "/register",
+                        "/css/**",
+                        "/js/**",
+                        "/images/**"
+                    ).permitAll()
+                    .anyRequest().authenticated()
                 )
-                .csrf(csrf -> csrf.disable())  // Disable CSRF for testing
-                .headers(headers -> headers
-                    .frameOptions(frame -> frame.disable())
+                .formLogin(form -> form
+                    .loginPage("/login").permitAll()
+                    .defaultSuccessUrl("/projects", true)
+                )
+                .logout(logout -> logout
+                    .logoutUrl("/logout")
+                    .logoutSuccessUrl("/")
                 );
 
             return http.build();
