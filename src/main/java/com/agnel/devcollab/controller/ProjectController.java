@@ -34,10 +34,15 @@ public class ProjectController {
 
     @GetMapping("/projects")
     public String listProjects(Model model, Authentication auth) {
-        String email = auth.getName();
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        List<Project> allProjects = projectRepository.findByOwnerId(user.getId());
+        List<Project> allProjects;
+        if (auth != null) {
+            String email = auth.getName();
+            User user = userRepository.findByEmail(email).orElse(null);
+            allProjects = (user != null) ? projectRepository.findByOwnerId(user.getId()) : projectRepository.findAll();
+        } else {
+            // Security disabled: show all projects for demo/testing
+            allProjects = projectRepository.findAll();
+        }
 
         // PRE-FILTER IN JAVA
         List<Project> todo = allProjects.stream()
@@ -353,10 +358,13 @@ public class ProjectController {
                                 Authentication auth,
                                 HttpSession session,
                                 RedirectAttributes redirectAttributes) {
-        String email = auth.getName();
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        project.setOwner(user);
+        if (auth != null) {
+            String email = auth.getName();
+            User user = userRepository.findByEmail(email).orElse(null);
+            if (user != null) {
+                project.setOwner(user);
+            }
+        }
         project.setCreatedAt(LocalDateTime.now());
         projectRepository.save(project);
 
