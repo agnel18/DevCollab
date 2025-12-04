@@ -29,13 +29,26 @@ export function PomodoroWidget({
   isRunning,
   isOnlyActiveTimer 
 }: PomodoroWidgetProps) {
-  const [expanded, setExpanded] = useState(false);
   const [settings, setSettings] = useState<PomodoroSettings>(DEFAULT_SETTINGS);
   const [showSettings, setShowSettings] = useState(false);
   const [remainingSeconds, setRemainingSeconds] = useState(0);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
   const intervalRef = useRef<number>();
+  const settingsRef = useRef<HTMLDivElement>(null);
 
-  // Calculate remaining time
+  // Initialize remaining seconds from project duration
+  useEffect(() => {
+    const target = (project.isBreak ? project.breakDuration : project.pomodoroDuration) * 60;
+    setRemainingSeconds(target);
+  }, [project.pomodoroDuration, project.breakDuration, project.isBreak]);
+
+  // Track paused state
+  useEffect(() => {
+    setIsPaused(!isRunning && remainingSeconds > 0 && remainingSeconds < ((project.isBreak ? project.breakDuration : project.pomodoroDuration) * 60));
+  }, [isRunning, remainingSeconds, project]);
+
+  // Timer countdown logic - PAUSED/RESUMED timer stays at current position
   useEffect(() => {
     if (!isRunning || !project.pomodoroStart) {
       if (intervalRef.current) {
@@ -47,9 +60,11 @@ export function PomodoroWidget({
     const updateTimer = () => {
       const start = new Date(project.pomodoroStart!).getTime();
       const now = Date.now();
-      const elapsedSeconds = Math.floor((now - start) / 1000);
+      const elapsedSecs = Math.floor((now - start) / 1000);
       const targetSeconds = (project.isBreak ? project.breakDuration : project.pomodoroDuration) * 60;
-      const remaining = Math.max(0, targetSeconds - elapsedSeconds);
+      const remaining = Math.max(0, targetSeconds - elapsedSecs);
+      
+      setElapsedSeconds(elapsedSecs);
       setRemainingSeconds(remaining);
 
       // Notify when complete
@@ -59,12 +74,26 @@ export function PomodoroWidget({
     };
 
     updateTimer();
-    intervalRef.current = window.setInterval(updateTimer, 1000);
+    intervalRef.current = window.setInterval(updateTimer, 100);
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [isRunning, project.pomodoroStart, project.pomodoroDuration, project.breakDuration, project.isBreak, settings.soundEnabled]);
+
+  // Close settings when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
+        setShowSettings(false);
+      }
+    };
+
+    if (showSettings) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showSettings]);
 
   const playNotificationSound = () => {
     try {
@@ -75,191 +104,167 @@ export function PomodoroWidget({
     }
   };
 
-  const progress = isRunning && project.pomodoroStart ? 
-    (1 - (remainingSeconds / ((project.isBreak ? project.breakDuration : project.pomodoroDuration) * 60))) * 100 : 0;
+  const targetSeconds = (project.isBreak ? project.breakDuration : project.pomodoroDuration) * 60;
+  const progress = isRunning ? ((elapsedSeconds / targetSeconds) * 100) : 0;
 
-  // Collapsed state - just icon + time
-  if (!expanded && !isRunning) {
-    return (
-      <div
-        onClick={() => setExpanded(true)}
-        className="flex items-center gap-2 px-2 py-1 text-xs text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer transition-colors"
-      >
-        <span className="text-sm">⏱</span>
-        <span>{formatTimeHuman(project.totalSecondsSpent)}</span>
-      </div>
-    );
-  }
-
-  // Expanded state - show full controls
   return (
-    <div className="relative bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-lg p-2 border border-green-200 dark:border-green-700"
-      style={{ maxWidth: '140px', maxHeight: '56px' }}>
-      
-      {/* Progress circle + timer */}
-      <div className="flex items-center gap-2">
-        {/* Circular progress */}
+    <div className="flex flex-col gap-2 w-full">
+      {/* Single row: Timer + Progress + Buttons */}
+      <div className="flex items-center gap-2 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-lg px-3 py-2 border border-green-200 dark:border-green-700">
+        {/* Timer display */}
+        <div className="text-lg font-bold text-gray-800 dark:text-gray-100 whitespace-nowrap">
+          {formatPomodoroTime(remainingSeconds)}
+        </div>
+
+        {/* Horizontal progress bar */}
         {isRunning && (
-          <div className="relative w-10 h-10">
-            <svg className="w-full h-full -rotate-90">
-              <circle
-                cx="20"
-                cy="20"
-                r="16"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="3"
-                className="text-gray-200 dark:text-gray-600"
-              />
-              <circle
-                cx="20"
-                cy="20"
-                r="16"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="3"
-                strokeDasharray={`${2 * Math.PI * 16}`}
-                strokeDashoffset={`${2 * Math.PI * 16 * (1 - progress / 100)}`}
-                strokeLinecap="round"
-                className={clsx(
-                  'transition-all duration-1000',
-                  project.isBreak ? 'text-blue-500' : 'text-green-500'
-                )}
-              />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold">
-              {formatPomodoroTime(remainingSeconds).split(':')[0]}
-            </div>
+          <div className="flex-1 h-1.5 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
+            <div
+              className={clsx(
+                'h-full transition-all duration-100',
+                project.isBreak ? 'bg-blue-500' : 'bg-green-500'
+              )}
+              style={{ width: `${progress}%` }}
+            />
           </div>
         )}
 
-        {/* Controls */}
-        <div className="flex flex-col gap-1 flex-1">
-          <div className="flex items-center gap-1">
-            {!isRunning ? (
-              <button
-                onClick={onStart}
-                disabled={!isOnlyActiveTimer}
-                className={clsx(
-                  "px-1.5 py-0.5 rounded text-[10px] font-medium transition-colors",
-                  isOnlyActiveTimer
-                    ? "bg-green-500 text-white hover:bg-green-600"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                )}
-                title={!isOnlyActiveTimer ? "Another timer is running" : "Start timer"}
-              >
-                ▶
-              </button>
-            ) : (
-              <>
-                <button
-                  onClick={onPause}
-                  className="px-1.5 py-0.5 bg-yellow-500 text-white rounded text-[10px] font-medium hover:bg-yellow-600 transition-colors"
-                >
-                  ❚❚
-                </button>
-                <button
-                  onClick={onStop}
-                  className="px-1.5 py-0.5 bg-red-500 text-white rounded text-[10px] font-medium hover:bg-red-600 transition-colors"
-                >
-                  ⏹
-                </button>
-              </>
-            )}
-            
-            {/* Settings */}
-            <div className="relative">
-              <button
-                onClick={() => setShowSettings(!showSettings)}
-                className="px-1.5 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-[10px] hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-              >
-                ⚙
-              </button>
-              
-              {showSettings && (
-                <div className="absolute left-0 bottom-full mb-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-2 z-50 w-48 text-xs">
-                  <div className="font-semibold mb-2 text-gray-700 dark:text-gray-300">Pomodoro Settings</div>
-                  
-                  <label className="block mb-1">
-                    <span className="text-gray-600 dark:text-gray-400">Work:</span>
-                    <select
-                      value={settings.workDuration}
-                      onChange={(e) => setSettings({...settings, workDuration: Number(e.target.value)})}
-                      className="ml-2 px-1 py-0.5 border rounded dark:bg-gray-700 dark:border-gray-600"
-                    >
-                      <option value={15}>15m</option>
-                      <option value={25}>25m</option>
-                      <option value={45}>45m</option>
-                      <option value={60}>60m</option>
-                    </select>
-                  </label>
-                  
-                  <label className="block mb-1">
-                    <span className="text-gray-600 dark:text-gray-400">Short Break:</span>
-                    <select
-                      value={settings.shortBreak}
-                      onChange={(e) => setSettings({...settings, shortBreak: Number(e.target.value)})}
-                      className="ml-2 px-1 py-0.5 border rounded dark:bg-gray-700 dark:border-gray-600"
-                    >
-                      <option value={5}>5m</option>
-                      <option value={10}>10m</option>
-                      <option value={15}>15m</option>
-                    </select>
-                  </label>
-                  
-                  <label className="block mb-1">
-                    <span className="text-gray-600 dark:text-gray-400">Long Break:</span>
-                    <select
-                      value={settings.longBreak}
-                      onChange={(e) => setSettings({...settings, longBreak: Number(e.target.value)})}
-                      className="ml-2 px-1 py-0.5 border rounded dark:bg-gray-700 dark:border-gray-600"
-                    >
-                      <option value={15}>15m</option>
-                      <option value={20}>20m</option>
-                      <option value={30}>30m</option>
-                    </select>
-                  </label>
-                  
-                  <label className="flex items-center gap-2 mb-1">
-                    <input
-                      type="checkbox"
-                      checked={settings.soundEnabled}
-                      onChange={(e) => setSettings({...settings, soundEnabled: e.target.checked})}
-                      className="rounded"
-                    />
-                    <span className="text-gray-600 dark:text-gray-400">Sound</span>
-                  </label>
-                  
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={settings.autoStartBreaks}
-                      onChange={(e) => setSettings({...settings, autoStartBreaks: e.target.checked})}
-                      className="rounded"
-                    />
-                    <span className="text-gray-600 dark:text-gray-400">Auto-start breaks</span>
-                  </label>
-                </div>
+        {/* Control buttons */}
+        <div className="flex items-center gap-1">
+          {!isRunning && !isPaused ? (
+            <button
+              onClick={onStart}
+              disabled={!isOnlyActiveTimer}
+              className={clsx(
+                "w-6 h-6 rounded flex items-center justify-center text-xs font-medium transition-colors",
+                isOnlyActiveTimer
+                  ? "bg-green-500 text-white hover:bg-green-600"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
               )}
-            </div>
-          </div>
-          
-          {/* Time display */}
-          <div className="text-[9px] text-gray-500 dark:text-gray-400">
-            {formatTimeHuman(project.totalSecondsSpent)} total
+              title={!isOnlyActiveTimer ? "Another timer is running" : "Start timer"}
+            >
+              ▶
+            </button>
+          ) : isPaused ? (
+            <button
+              onClick={onStart}
+              className="w-6 h-6 bg-green-500 text-white rounded flex items-center justify-center text-xs font-medium hover:bg-green-600 transition-colors"
+              title="Resume timer"
+            >
+              ▶
+            </button>
+          ) : (
+            <button
+              onClick={onPause}
+              className="w-6 h-6 bg-yellow-500 text-white rounded flex items-center justify-center text-xs font-medium hover:bg-yellow-600 transition-colors"
+              title="Pause timer"
+            >
+              ❚❚
+            </button>
+          )}
+
+          {isRunning && (
+            <button
+              onClick={onStop}
+              className="w-6 h-6 bg-red-500 text-white rounded flex items-center justify-center text-xs font-medium hover:bg-red-600 transition-colors"
+              title="Stop timer and save time"
+            >
+              ⏹
+            </button>
+          )}
+
+          {/* Settings button with modal */}
+          <div className="relative" ref={settingsRef}>
+            <button
+              onClick={() => setShowSettings(!showSettings)}
+              className="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center text-xs hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              title="Pomodoro settings"
+            >
+              ⚙
+            </button>
+            
+            {showSettings && (
+              <div className="fixed inset-0 z-[9998]" onClick={() => setShowSettings(false)} />
+            )}
+
+            {showSettings && (
+              <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 p-4 z-[9999] w-72 text-xs">
+                <div className="font-semibold mb-3 text-gray-700 dark:text-gray-300">⏱ Timer Settings</div>
+                
+                <label className="block mb-3">
+                  <span className="text-gray-600 dark:text-gray-400 block mb-1">Work Duration (1-99 min)</span>
+                  <input
+                    type="number"
+                    value={settings.workDuration}
+                    onChange={(e) => {
+                      const val = Math.max(1, Math.min(99, Number(e.target.value) || 25));
+                      setSettings({...settings, workDuration: val});
+                    }}
+                    min={1}
+                    max={99}
+                    className="w-full px-2 py-1.5 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  />
+                </label>
+                
+                <label className="block mb-3">
+                  <span className="text-gray-600 dark:text-gray-400 block mb-1">Short Break (1-99 min)</span>
+                  <input
+                    type="number"
+                    value={settings.shortBreak}
+                    onChange={(e) => {
+                      const val = Math.max(1, Math.min(99, Number(e.target.value) || 5));
+                      setSettings({...settings, shortBreak: val});
+                    }}
+                    min={1}
+                    max={99}
+                    className="w-full px-2 py-1.5 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  />
+                </label>
+                
+                <label className="block mb-3">
+                  <span className="text-gray-600 dark:text-gray-400 block mb-1">Long Break (1-99 min)</span>
+                  <input
+                    type="number"
+                    value={settings.longBreak}
+                    onChange={(e) => {
+                      const val = Math.max(1, Math.min(99, Number(e.target.value) || 15));
+                      setSettings({...settings, longBreak: val});
+                    }}
+                    min={1}
+                    max={99}
+                    className="w-full px-2 py-1.5 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  />
+                </label>
+                
+                <label className="flex items-center gap-2 mb-2.5">
+                  <input
+                    type="checkbox"
+                    checked={settings.soundEnabled}
+                    onChange={(e) => setSettings({...settings, soundEnabled: e.target.checked})}
+                    className="rounded"
+                  />
+                  <span className="text-gray-600 dark:text-gray-400">🔔 Sound on complete</span>
+                </label>
+                
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={settings.autoStartBreaks}
+                    onChange={(e) => setSettings({...settings, autoStartBreaks: e.target.checked})}
+                    className="rounded"
+                  />
+                  <span className="text-gray-600 dark:text-gray-400">▶ Auto-start breaks</span>
+                </label>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Close button when expanded and not running */}
-      {expanded && !isRunning && (
-        <button
-          onClick={() => setExpanded(false)}
-          className="absolute -top-1 -right-1 w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded-full text-[10px] flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-600"
-        >
-          ×
-        </button>
-      )}
+      {/* Total time spent */}
+      <div className="text-center text-xs text-gray-500 dark:text-gray-400">
+        Total: {formatTimeHuman(project.totalSecondsSpent)}
+      </div>
     </div>
   );
 }

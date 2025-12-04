@@ -142,6 +142,7 @@ export function ProjectCard({
               }
             }}
             className="text-xs text-red-600 hover:text-red-700 dark:text-red-400"
+            title="Delete this completed project"
           >
             🗑
           </button>

@@ -23,6 +23,16 @@ public class Project {
     @JoinColumn(name = "owner_id")
     private User owner;
 
+    @ManyToOne
+    @JoinColumn(name = "board_id", nullable = false)
+    @JsonIgnoreProperties("projects")
+    private Board board;
+
+    @ManyToOne
+    @JoinColumn(name = "column_id", nullable = false)
+    @JsonIgnoreProperties("projects")
+    private BoardColumn boardColumn;
+
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnoreProperties("project")
     private List<Task> tasks = new ArrayList<>();
@@ -37,6 +47,7 @@ public class Project {
 
     private LocalDateTime pomodoroStart;
     private long totalSecondsSpent = 0; // Changed to seconds for accurate HH:MM:SS display
+    private long pausedElapsedSeconds = 0; // Track elapsed seconds when paused for resume
     
     // Pomodoro cycle settings
     private int pomodoroDuration = 25; // Work duration in minutes (default 25)
@@ -66,6 +77,12 @@ public class Project {
 
     public User getOwner() { return owner; }
     public void setOwner(User owner) { this.owner = owner; }
+
+    public Board getBoard() { return board; }
+    public void setBoard(Board board) { this.board = board; }
+
+    public BoardColumn getBoardColumn() { return boardColumn; }
+    public void setBoardColumn(BoardColumn boardColumn) { this.boardColumn = boardColumn; }
 
     public Status getStatus() { return status; }
     public void setStatus(Status status) { 
@@ -127,6 +144,9 @@ public class Project {
     
     public boolean isBreak() { return isBreak; }
     public void setBreak(boolean isBreak) { this.isBreak = isBreak; }
+    
+    public long getPausedElapsedSeconds() { return pausedElapsedSeconds; }
+    public void setPausedElapsedSeconds(long seconds) { this.pausedElapsedSeconds = seconds; }
     
     // Helper method to get current timer target in seconds
     public long getCurrentTimerTarget() {

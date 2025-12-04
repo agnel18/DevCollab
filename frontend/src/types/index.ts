@@ -1,11 +1,31 @@
+export interface Board {
+  id: number;
+  name: string;
+  description?: string;
+  color?: string;
+  ownerId: number;
+  createdAt: string;
+  columns: BoardColumn[];
+}
+
+export interface BoardColumn {
+  id: number;
+  name: string;
+  position: number;
+  bgColor?: string;
+  boardId: number;
+}
+
 export interface Project {
   id: number;
   name: string;
   description?: string;
-  status: 'TODO' | 'DOING' | 'DONE';
+  boardId: number;
+  boardColumnId: number;
   estimatedPomodoros?: number;
   completedPomodoros?: number;
   totalSecondsSpent: number;
+  pausedElapsedSeconds: number;
   pomodoroStart?: string;
   pomodoroDuration: number; // minutes
   breakDuration: number; // minutes

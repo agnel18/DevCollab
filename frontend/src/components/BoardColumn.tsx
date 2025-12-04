@@ -5,32 +5,37 @@ import { ProjectCard } from './ProjectCard';
 import clsx from 'clsx';
 
 interface BoardColumnProps {
-  id: string;
+  id: number;
   title: string;
   projects: Project[];
-  color: 'blue' | 'yellow' | 'green';
+  color?: string;
   onStartPomodoro: (id: number) => void;
   onPausePomodoro: (id: number) => void;
   onStopPomodoro: (id: number) => void;
   onDelete: (id: number) => void;
+  onAddCard: () => void;
   activeTimerId: number | null;
 }
 
-const colorClasses = {
+const colorClasses: Record<string, string> = {
   blue: 'border-blue-500 text-blue-700 dark:text-blue-300',
   yellow: 'border-yellow-500 text-yellow-700 dark:text-yellow-300',
   green: 'border-green-500 text-green-700 dark:text-green-300',
+  purple: 'border-purple-500 text-purple-700 dark:text-purple-300',
+  red: 'border-red-500 text-red-700 dark:text-red-300',
+  indigo: 'border-indigo-500 text-indigo-700 dark:text-indigo-300',
 };
 
 export function BoardColumn({
   id,
   title,
   projects,
-  color,
+  color = 'blue',
   onStartPomodoro,
   onPausePomodoro,
   onStopPomodoro,
   onDelete,
+  onAddCard,
   activeTimerId,
 }: BoardColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id });
@@ -40,7 +45,7 @@ export function BoardColumn({
       {/* Column Header */}
       <div className={clsx(
         'flex items-center justify-between px-3 py-2 mb-2 rounded-t-lg border-t-4',
-        colorClasses[color],
+        colorClasses[color] || colorClasses.blue,
         'bg-gray-100 dark:bg-gray-800'
       )}>
         <h2 className="font-semibold text-sm uppercase tracking-wide">
@@ -64,9 +69,7 @@ export function BoardColumn({
         <SortableContext items={projects.map(p => p.id)} strategy={verticalListSortingStrategy}>
           {projects.length === 0 ? (
             <div className="text-center py-8 text-gray-400 dark:text-gray-600 text-sm">
-              {id === 'todo' && 'No tasks yet'}
-              {id === 'doing' && 'Start working on a task'}
-              {id === 'done' && 'Complete tasks to see them here'}
+              No tasks yet
             </div>
           ) : (
             projects.map((project) => (
@@ -83,9 +86,11 @@ export function BoardColumn({
           )}
         </SortableContext>
       </div>
-
       {/* Add card button */}
-      <button className="mt-2 px-3 py-2 text-left text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors">
+      <button 
+        onClick={onAddCard}
+        className="mt-2 px-3 py-2 text-left text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors w-full"
+      >
         + Add a card
       </button>
     </div>

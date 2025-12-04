@@ -1,0 +1,11 @@
+package com.agnel.devcollab.repository;
+
+import com.agnel.devcollab.entity.BoardColumn;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import java.util.List;
+
+@Repository
+public interface ColumnRepository extends JpaRepository<BoardColumn, Long> {
+    List<BoardColumn> findByBoardIdOrderByPosition(Long boardId);
+}

@@ -2,6 +2,8 @@ package com.agnel.devcollab.controller.api;
 
 import com.agnel.devcollab.entity.Project;
 import com.agnel.devcollab.repository.ProjectRepository;
+import com.agnel.devcollab.repository.ColumnRepository;
+import com.agnel.devcollab.repository.BoardRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,9 +19,23 @@ public class ProjectRestController {
     @Autowired
     private ProjectRepository projectRepository;
 
+    @Autowired
+    private ColumnRepository columnRepository;
+
+    @Autowired
+    private BoardRepository boardRepository;
+
     @GetMapping
     public List<Project> getAllProjects() {
         return projectRepository.findAll();
+    }
+
+    @GetMapping("/board/{boardId}")
+    public ResponseEntity<List<Project>> getProjectsByBoard(@PathVariable long boardId) {
+        if (!boardRepository.existsById(boardId)) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(projectRepository.findByBoardId(boardId));
     }
 
     @GetMapping("/{id}")
@@ -42,11 +58,15 @@ public class ProjectRestController {
                 .map(project -> {
                     if (updates.getName() != null) project.setName(updates.getName());
                     if (updates.getDescription() != null) project.setDescription(updates.getDescription());
-                    if (updates.getStatus() != null) {
-                        project.setStatus(updates.getStatus());
-                        if (updates.getStatus().toString().equals("DONE")) {
-                            project.setCompletedAt(LocalDateTime.now());
-                        }
+                    // Support moving to a different column
+                    if (updates.getBoardColumn() != null && updates.getBoardColumn().getId() != null) {
+                        return columnRepository.findById(updates.getBoardColumn().getId())
+                                .map(column -> {
+                                    project.setBoardColumn(column);
+                                    if (updates.getEstimatedPomodoros() != null) project.setEstimatedPomodoros(updates.getEstimatedPomodoros());
+                                    return ResponseEntity.ok(projectRepository.save(project));
+                                })
+                                .orElse(ResponseEntity.notFound().build());
                     }
                     if (updates.getEstimatedPomodoros() != null) project.setEstimatedPomodoros(updates.getEstimatedPomodoros());
                     return ResponseEntity.ok(projectRepository.save(project));
@@ -67,8 +87,28 @@ public class ProjectRestController {
     public ResponseEntity<Project> startPomodoro(@PathVariable long id) {
         return projectRepository.findById(id)
                 .map(project -> {
-                    project.setPomodoroStart(LocalDateTime.now());
+                    // If resuming from pause, adjust start time to account for paused elapsed time
+                    if (project.getPausedElapsedSeconds() > 0) {
+                        project.setPomodoroStart(LocalDateTime.now().minusSeconds(project.getPausedElapsedSeconds()));
+                    } else {
+                        project.setPomodoroStart(LocalDateTime.now());
+                    }
                     project.setBreak(false);
+                    return ResponseEntity.ok(projectRepository.save(project));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/{id}/pomodoro/pause")
+    public ResponseEntity<Project> pausePomodoro(@PathVariable long id) {
+        return projectRepository.findById(id)
+                .map(project -> {
+                    if (project.getPomodoroStart() != null) {
+                        // Calculate elapsed seconds and store for resume
+                        long secondsElapsed = java.time.Duration.between(project.getPomodoroStart(), LocalDateTime.now()).getSeconds();
+                        project.setPausedElapsedSeconds(secondsElapsed);
+                        project.setPomodoroStart(null); // Stop the timer
+                    }
                     return ResponseEntity.ok(projectRepository.save(project));
                 })
                 .orElse(ResponseEntity.notFound().build());
@@ -82,12 +122,17 @@ public class ProjectRestController {
                         long secondsSpent = java.time.Duration.between(project.getPomodoroStart(), LocalDateTime.now()).getSeconds();
                         project.setTotalSecondsSpent(project.getTotalSecondsSpent() + secondsSpent);
                         project.setPomodoroStart(null);
+                        project.setPausedElapsedSeconds(0); // Clear paused state
                         
                         // Increment completed pomodoros if session was long enough (e.g., > 1 second for testing)
                         if (secondsSpent > 1) {
                             int completed = project.getCompletedPomodoros() != null ? project.getCompletedPomodoros() : 0;
                             project.setCompletedPomodoros(completed + 1);
                         }
+                    } else if (project.getPausedElapsedSeconds() > 0) {
+                        // If stopping while paused, add the paused time to total
+                        project.setTotalSecondsSpent(project.getTotalSecondsSpent() + project.getPausedElapsedSeconds());
+                        project.setPausedElapsedSeconds(0);
                     }
                     return ResponseEntity.ok(projectRepository.save(project));
                 })
