@@ -36,11 +36,30 @@ public class BoardColumn {
         this.bgColor = getDefaultColorForPosition(position);
     }
 
+    public BoardColumn(String name, int position, Board board, String color) {
+        this.name = name;
+        this.position = position;
+        this.board = board;
+        this.bgColor = getHexColorForName(color);
+    }
+
+    private String getHexColorForName(String colorName) {
+        return switch (colorName.toLowerCase()) {
+            case "red" -> "#EF4444";
+            case "orange" -> "#F97316";
+            case "yellow" -> "#EAB308";
+            case "green" -> "#22C55E";
+            case "blue" -> "#3B82F6";
+            case "purple" -> "#A855F7";
+            default -> "#6B7280"; // Gray
+        };
+    }
+
     private String getDefaultColorForPosition(int position) {
         return switch (position) {
-            case 0 -> "#3B82F6"; // Blue
-            case 1 -> "#F59E0B"; // Yellow
-            case 2 -> "#10B981"; // Green
+            case 0 -> "#EF4444"; // Red
+            case 1 -> "#F97316"; // Orange
+            case 2 -> "#22C55E"; // Green
             default -> "#6B7280"; // Gray
         };
     }

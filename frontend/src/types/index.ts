@@ -22,6 +22,7 @@ export interface Project {
   description?: string;
   boardId: number;
   boardColumnId: number;
+  status: 'TODO' | 'DOING' | 'DONE';
   estimatedPomodoros?: number;
   completedPomodoros?: number;
   totalSecondsSpent: number;

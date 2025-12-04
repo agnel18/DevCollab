@@ -2,7 +2,6 @@ package com.agnel.devcollab.controller.api;
 
 import com.agnel.devcollab.entity.Board;
 import com.agnel.devcollab.entity.BoardColumn;
-import com.agnel.devcollab.entity.Project;
 import com.agnel.devcollab.repository.BoardRepository;
 import com.agnel.devcollab.repository.ColumnRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,14 +69,22 @@ public class BoardRestController {
         return boardRepository.findById(boardId)
                 .map(board -> {
                     column.setBoard(board);
+                    // Auto-assign position as next in sequence
+                    int maxPosition = board.getColumns() != null 
+                        ? board.getColumns().stream().mapToInt(BoardColumn::getPosition).max().orElse(-1) 
+                        : -1;
+                    column.setPosition(maxPosition + 1);
                     BoardColumn saved = columnRepository.save(column);
                     return ResponseEntity.ok(saved);
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @DeleteMapping("/columns/{columnId}")
-    public ResponseEntity<Void> deleteColumn(@PathVariable long columnId) {
+    @DeleteMapping("/{boardId}/columns/{columnId}")
+    public ResponseEntity<Void> deleteColumn(@PathVariable long boardId, @PathVariable long columnId) {
+        if (!boardRepository.existsById(boardId)) {
+            return ResponseEntity.notFound().build();
+        }
         if (columnRepository.existsById(columnId)) {
             columnRepository.deleteById(columnId);
             return ResponseEntity.ok().build();
@@ -85,8 +92,23 @@ public class BoardRestController {
         return ResponseEntity.notFound().build();
     }
 
+    @PatchMapping("/{boardId}/columns/{columnId}")
+    public ResponseEntity<BoardColumn> updateColumn(@PathVariable long boardId, @PathVariable long columnId, @RequestBody BoardColumn updates) {
+        if (!boardRepository.existsById(boardId)) {
+            return ResponseEntity.notFound().build();
+        }
+        return columnRepository.findById(columnId)
+                .map(column -> {
+                    if (updates.getName() != null) column.setName(updates.getName());
+                    if (updates.getBgColor() != null) column.setBgColor(updates.getBgColor());
+                    if (updates.getPosition() >= 0) column.setPosition(updates.getPosition());
+                    return ResponseEntity.ok(columnRepository.save(column));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @PatchMapping("/columns/{columnId}")
-    public ResponseEntity<BoardColumn> updateColumn(@PathVariable long columnId, @RequestBody BoardColumn updates) {
+    public ResponseEntity<BoardColumn> updateColumnLegacy(@PathVariable long columnId, @RequestBody BoardColumn updates) {
         return columnRepository.findById(columnId)
                 .map(column -> {
                     if (updates.getName() != null) column.setName(updates.getName());

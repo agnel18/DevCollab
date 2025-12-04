@@ -53,9 +53,9 @@ public class Board {
         }
         // Create default columns if empty
         if (this.columns.isEmpty()) {
-            this.columns.add(new BoardColumn("To Do", 0, this));
-            this.columns.add(new BoardColumn("Doing", 1, this));
-            this.columns.add(new BoardColumn("Done", 2, this));
+            this.columns.add(new BoardColumn("To Do", 0, this, "red"));
+            this.columns.add(new BoardColumn("Doing", 1, this, "orange"));
+            this.columns.add(new BoardColumn("Done", 2, this, "green"));
         }
     }
 

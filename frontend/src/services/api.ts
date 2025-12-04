@@ -85,13 +85,21 @@ export const api = {
   },
 
   createProject: async (project: Partial<Project>): Promise<Project> => {
+    console.log('API: Creating project with:', project);
     const res = await fetch(`${API_BASE}/projects`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(project),
     });
-    if (!res.ok) throw new Error('Failed to create project');
-    return res.json();
+    console.log('API: Response status:', res.status);
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('API: Error response:', errorText);
+      throw new Error('Failed to create project');
+    }
+    const data = await res.json();
+    console.log('API: Created project:', data);
+    return data;
   },
 
   updateProject: async (id: number, updates: Partial<Project>): Promise<Project> => {
